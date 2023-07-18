@@ -3,7 +3,7 @@ import './App.css';
 import { Container, Row, Col } from 'react-bootstrap'
 import TFNavbar from './components/TFNavbar';
 import { BrowserRouter , Routes, Route } from 'react-router-dom';
-import Home from './pages/Home';
+import Landing from './pages/Landing';
 
 function App() {
   return (
@@ -12,7 +12,7 @@ function App() {
       <Container fluid>
         <BrowserRouter>
           <Routes>
-            <Route exact path='/' element={<Home />} />
+            <Route exact path='/' element={<Landing />} />
           </Routes>
         </BrowserRouter>
       </Container>
