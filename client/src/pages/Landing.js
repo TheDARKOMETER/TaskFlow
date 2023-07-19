@@ -1,16 +1,27 @@
 import React from 'react'
-import { Row, Col, Card, Form, Button } from 'react-bootstrap'
+import { Row, Col, Image } from 'react-bootstrap'
+import { Link } from 'react-router-dom'
+import SignUp from '../components/SignUp'
+import PageDiv from '../components/PageDiv'
+import LogoLight from '../assets/logo-simplified-light.png'
+// import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+// import { faCoffee } from '@fortawesome/free-solid-svg-icons'
+
+
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import { icon } from '@fortawesome/fontawesome-svg-core/import.macro'
+
 
 export default function Home() {
     return (
         <>
-            <div className='ps-3 pe-3 text-left pt-5' style={{ fontSize: '1.22rem' }}>
+            <PageDiv isBackGroundWhite={true}>
                 <Row>
                     <Col>
                     </Col>
                     <Col md='7'>
                         <Row>
-                            <Col md='7  '>
+                            <Col lg='8' md='12'>
                                 <h1 style={{ fontSize: '64px' }} className='mb-3'>Streamline Your Tasks and Boost Productivity with TaskFlow&nbsp;
                                     <span style={{
                                         background: 'linear-gradient(to top, rgba(9, 132, 227, 0.5) 80%, transparent 50%)',
@@ -23,44 +34,40 @@ export default function Home() {
                                     Say goodbye to productivity roadblocks and hello to TaskFlow – your ultimate
                                     task management solution. TaskFlow empowers individuals, teams, and businesses
                                     to stay organized, focused, and on top of their work.</p>
+                                <Link to='/signup' className='w-50 btn btn-dark'>Get Started</Link>
+
 
                             </Col>
-                            <Col>
-                                <Card className='h-100' style={{ display: 'flex', maxWidth:'800px' }}>
-                                    <Card.Body>
-                                        <Card.Title className='text-center'>Sign Up</Card.Title>
-                                        <Form>
-                                            <Form.Group id="email">
-                                                <Form.Label>Email</Form.Label>
-                                                <Form.Control type="email" required />
-                                            </Form.Group>
-                                            <Form.Group id="password">
-                                                <Form.Label>Password</Form.Label>
-                                                <Form.Control type="password" required />
-                                            </Form.Group>
-                                            <Form.Group id="password-confirm">
-                                                <Form.Label>Password Confirmation</Form.Label>
-                                                <Form.Control type="password" required />
-                                            </Form.Group>
-                                            <Button variant='dark' className='w-100 mt-3 mb-3' type='submit'>Sign Up</Button>
-                                        </Form>
-                                        <div className='w-100 text-center' style={{
-                                            borderBottom: '1px solid #000',
-                                            lineHeight: '0.1em',
-                                            fontSize:'18px',
-                                            margin: '10px 0 20px'
-                                        }}><span style={{
-                                            background:'#fff',
-                                            padding:'0 5px'
-                                        }}>or</span></div>
-                                    </Card.Body>
-                                </Card>
+                            <Col lg='4' md='12' sm='12'>
+                                <SignUp />
                             </Col>
                         </Row>
                     </Col>
                     <Col></Col>
                 </Row >
-            </div >
+            </PageDiv >
+            <PageDiv isBackGroundWhite={false}>
+                <Row>
+                    <Col />
+                    <Col md='7'>
+                        <div className='text-center'>
+                            <Image src={LogoLight} fluid />
+                            <h1>
+                                {/* <FontAwesomeIcon icon={faCoffee} /> */}
+                                Stay Organized and Efficient with TaskFlow
+                            </h1>
+                            <p>
+                                TaskFlow is your go-to task management platform that simplifies
+                                your daily workflow. With intuitive features, seamless collaboration,
+                                and customizable task tracking, TaskFlow helps you stay organized, prioritize tasks,
+                                and accomplish more. Streamline your work, eliminate distractions, and achieve your goals with TaskFlow.
+                            </p>
+                        </div>
+
+                    </Col>
+                    <Col />
+                </Row>
+            </PageDiv>
         </>
     )
 }
