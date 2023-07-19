@@ -2,7 +2,7 @@ import './Footer.css'
 
 function Footer() {
     return (
-        <footer className="footer bg-light">
+        <footer className="footer bg-light" style={{borderTop:'solid black 1px'}}>
             <div className='links-wrapper container-fluid'>
                 <div className='row'>
                     <div className='footer-logo-wrapper col'>

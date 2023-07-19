@@ -36,8 +36,8 @@ export default function TFNavbar() {
                 <NavbarToggle aria-controls='basic-navbar-nav' />
                 <NavbarCollapse id="basic-navbar-nav">
                     <Nav className="me-auto">
-                        <Nav.Link href="#home">Home</Nav.Link>
-                        <Nav.Link href="#link">About Us</Nav.Link>                
+                        <Nav.Link href='/'>Home</Nav.Link>
+                        <Nav.Link href="/about">About Us</Nav.Link>                
                     </Nav>
                     <Nav>
                         {

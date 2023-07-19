@@ -1,24 +1,24 @@
-import logo from './logo.svg';
 import './App.css';
-import { Container, Row, Col } from 'react-bootstrap'
-import TFNavbar from './components/TFNavbar';
-import { BrowserRouter , Routes, Route } from 'react-router-dom';
-import Landing from './pages/Landing';
-import Footer from './components/Footer';
+import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import Home from './pages/Home';
 import SignUp from './components/SignUp';
+import About from './pages/About';
+import { MainLayout, AuthLayout } from './layouts/tf-layouts';
 
 function App() {
   return (
     <>
-      <TFNavbar />
-      <Container fluid className='pe-0 ps-0'>
-        <BrowserRouter>
-          <Routes>
-            <Route exact path='/' element={<Landing />} />
-          </Routes>
-        </BrowserRouter>
-      </Container>
-      <Footer />
+      <BrowserRouter>
+        <Routes>
+          <Route exact path='/' element={<MainLayout />}>
+            <Route index element={<Home />} />
+            <Route path='/about' element={<About />} />
+          </Route>
+          <Route path='/signup' element={<AuthLayout />} >
+            <Route index element={<SignUp />} />
+          </Route>
+        </Routes>
+      </BrowserRouter>
     </>
   );
 }
