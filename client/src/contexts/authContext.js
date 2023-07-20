@@ -1,6 +1,6 @@
-import React, { useState, useEffect, useContext, Children } from 'react'
-import { auth, createUserWithEmailAndPassword } from '../firebase'
-// import { createUserWithEmailAndPassword } from 'firebase/auth'
+import React, { useState, useEffect, useContext } from 'react'
+import { auth } from '../firebase'
+import { createUserWithEmailAndPassword, signOut, signInWithEmailAndPassword, sendPasswordResetEmail, updateProfile, updatePassword } from 'firebase/auth'
 
 const AuthContext = React.createContext()
 
@@ -15,6 +15,41 @@ export default function AuthProvider({ children }) {
     function signup(email, password) {
         return createUserWithEmailAndPassword(auth, email, password).then((userCredential) => {
             setCurrentUser(userCredential.user)
+        }).catch((err) => {
+            throw new Error(err.message.replace('Firebase: Error ', ''))
+        })
+    }
+
+    function resetPassword(email) {
+        return sendPasswordResetEmail(auth, email)
+    }
+
+    function updateDisplayName(username) {
+        return updateProfile(auth.currentUser, {
+            displayName: username
+        }).catch((err) => {
+            throw new Error(err.message.replace('Firebase: Error ', ''))
+        })
+    }
+
+    function updatePasswordWrapper(newPassword) {
+        return updatePassword(auth.currentUser, newPassword).catch((err) => {
+            throw new Error(err.message.replace('Firebase: Error ', ''))
+        })
+    }
+
+    function signin(email, password) {
+        return signInWithEmailAndPassword(auth, email, password).then((userCredential) => {
+            console.log(userCredential.user)
+            setCurrentUser(userCredential.user)
+        }).catch((err) => {
+            throw new Error(err.message.replace('Firebase: Error ', ''))
+        })
+    }
+
+    function logout() {
+        return signOut(auth).then(() => {
+            setCurrentUser()
         }).catch((err) => {
             throw new Error(err.message.replace('Firebase: Error ', ''))
         })
@@ -36,7 +71,12 @@ export default function AuthProvider({ children }) {
 
     const value = {
         currentUser,
-        signup
+        signup,
+        logout,
+        signin,
+        resetPassword,
+        updateDisplayName,
+        updatePasswordWrapper
     }
 
     return (

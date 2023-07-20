@@ -5,6 +5,11 @@ import SignUp from './components/SignUp';
 import About from './pages/About';
 import { MainLayout, AuthLayout } from './layouts/tf-layouts';
 import AuthProvider from './contexts/authContext';
+import Login from './components/Login';
+import RedirectHome from './components/RedirectHome';
+import ForgotPassword from './components/ForgotPassword';
+import UpdateUserInfo from './components/UpdateUserInfo';
+import Dashboard from './pages/Dashboard';
 
 function App() {
   return (
@@ -15,9 +20,14 @@ function App() {
             <Route exact path='/' element={<MainLayout />}>
               <Route index element={<Home />} />
               <Route path='/about' element={<About />} />
+              <Route path='/dashboard' element={<Dashboard />} />
             </Route>
-            <Route path='/signup' element={<AuthLayout />} >
-              <Route index element={<SignUp />} />
+            <Route exact path='/auth' element={<AuthLayout />}>
+              <Route index element={<RedirectHome />} />
+              <Route path='login' element={<Login />} />
+              <Route path='signup' element={<SignUp />} />
+              <Route path='forgot-password' element={<ForgotPassword />} />
+              <Route path='update-profile' element={<UpdateUserInfo />} />
             </Route>
           </Routes>
         </AuthProvider>

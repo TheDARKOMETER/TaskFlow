@@ -6,8 +6,12 @@ import PageDiv from '../components/PageDiv'
 import LogoLight from '../assets/logo-simplified-light.png'
 // import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 // import { faCoffee } from '@fortawesome/free-solid-svg-icons'
+import { useAuth } from '../contexts/authContext'
+import UserCard from '../components/UserCard'
 
 export default function Home() {
+    const { currentUser } = useAuth()
+
     return (
         <>
             <PageDiv isBackGroundWhite={true}>
@@ -34,7 +38,8 @@ export default function Home() {
 
                             </Col>
                             <Col lg='4' md='12' sm='12'>
-                                <SignUp />
+                                {!currentUser ? (<SignUp />) : (<UserCard />)}
+
                             </Col>
                         </Row>
                     </Col>
