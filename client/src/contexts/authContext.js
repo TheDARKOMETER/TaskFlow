@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useContext } from 'react'
 import { auth } from '../firebase'
-import { createUserWithEmailAndPassword, signOut, signInWithEmailAndPassword, sendPasswordResetEmail, updateProfile, updatePassword } from 'firebase/auth'
+import { createUserWithEmailAndPassword, signOut, signInWithEmailAndPassword, sendPasswordResetEmail, updateProfile, updatePassword, getIdToken } from 'firebase/auth'
 
 const AuthContext = React.createContext()
 
@@ -40,11 +40,15 @@ export default function AuthProvider({ children }) {
 
     function signin(email, password) {
         return signInWithEmailAndPassword(auth, email, password).then((userCredential) => {
-            console.log(userCredential.user)
+            // userCredential.user.getIdToken().then((token) => console.log(token))  <-- Gets the token of the current user
             setCurrentUser(userCredential.user)
         }).catch((err) => {
             throw new Error(err.message.replace('Firebase: Error ', ''))
         })
+    }
+
+    function getUserToken() {
+        return getIdToken(auth.currentUser)
     }
 
     function logout() {
@@ -76,7 +80,8 @@ export default function AuthProvider({ children }) {
         signin,
         resetPassword,
         updateDisplayName,
-        updatePasswordWrapper
+        updatePasswordWrapper,
+        getUserToken
     }
 
     return (
