@@ -10,6 +10,7 @@ import RedirectHome from './components/RedirectHome';
 import ForgotPassword from './components/ForgotPassword';
 import UpdateUserInfo from './components/UpdateUserInfo';
 import Dashboard from './pages/Dashboard';
+import Unauthorized from './pages/Unauthorized';
 
 function App() {
   return (
@@ -26,6 +27,7 @@ function App() {
               <Route index element={<RedirectHome />} />
               <Route path='login' element={<Login />} />
               <Route path='signup' element={<SignUp />} />
+              <Route path='unauthorized' element={<Unauthorized />} />
               <Route path='forgot-password' element={<ForgotPassword />} />
               <Route path='update-profile' element={<UpdateUserInfo />} />
             </Route>

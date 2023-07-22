@@ -4,9 +4,11 @@ const cors = require('cors')
 const db = require('./db');
 const admin = require('firebase-admin')
 const authenticateUser = require('./authenticateUser')
+const PORT = 4001
 
 const Task = require('./models/task')
-const User = require('./models/user')
+const User = require('./models/user');
+const bodyParser = require('body-parser');
 
 // app.use(authenticateUser)
 
@@ -21,6 +23,9 @@ app.use(
 )
 
 app.use(express.json())
+app.use(bodyParser.urlencoded({
+    extended: true
+}))
 
 const startDBServer = async () => {
     try {
@@ -30,63 +35,87 @@ const startDBServer = async () => {
     }
 }
 
+const checkIfUserExists = (firebaseUid) => new Promise((res, rej) => {
+    console.log("Executing looking for " + firebaseUid)
+    User.find({ firebaseUid }).then((result) => {
+        return res(result.length > 0)
+    }).catch((err) => {
+        return rej(err)
+    })
+})
+
+startDBServer()
 
 app.get('/dashboard', authenticateUser, (req, res) => {
-    // console.log("Congrats!" + req.user.uid)
+    // TODO: Once get request at path /dashboard is sent, load the task data for the user
+    res.status(200).send("You are authorized to see this")
+})
+
+app.get('/dashboard', authenticateUser, (req, res) => {
+    // TODO: Once get request at path /dashboard is sent, load the task data for the user
     res.status(200).send("You are authorized to see this")
 })
 
 
+app.post('/login', authenticateUser, (req, res) => {
+    console.log(req.body.firebaseUid)
+    var newUser = new User() // Alternatively you could do var user = new User({ firebaseUid })
+    newUser.firebaseUid = req.body.firebaseUid
+    checkIfUserExists(newUser.firebaseUid).then((result) => {
+        if (result) {
+            console.log("user already exists")
+            res.status(200).send({ message: "User already exists" })
+        } else {
+            console.log("User doesnt exist")
+            newUser.save().then((savedUser) => {
+                console.log("Successfully saved user: ", newUser.firebaseUid)
+                res.status(200).send(savedUser)
+            }).catch((err) => {
+                console.log("Error saving user: ", err)
+                res.status(500).send({ error: "error saving user" })
+            })
+        }
+    }).catch(() => {
+        console.log("An error has occured")
+        res.status(500).send({ error: "An error has occured" })
+    })
+})
 
-// app.get('/test', (req, res) => {
-//     var obj = {
-//         "message": "Hello!"
-//     }
-//     res.send(obj)
-// })
+app.post('/signup', authenticateUser, (req, res) => {
+    var newUser = new User()
+    newUser.firebaseUid = req.body.firebaseUid
+    newUser.save().then((savedUser) => {
+        console.log("Successfully saved user: ", newUser.firebaseUid)
+        res.status(200).send(savedUser)
+    }).catch((err) => {
+        console.log("Error saving user: ", err)
+        res.status(500).send({ error: "error saving user" })
+    })
+})
 
-// app.post('/test', (req, res) => {
-//     console.log(req.body.userToken)
-//     res.status(200).send({token: req.body.userToken}) 
-// })
-
-startDBServer()
-
-// app.post('/task', (req, res) => {
-//     var task = new Task();
-//     task.title = req.body.title
-//     task.description = req.body.description
-//     task.startDate = req.body.startdate
-//     task.dueDate = req.body.dueDate
-//     task.owner = req.body.
-//         console.log(req.body)
-//     res.status(200).send(req.body)
-// })
-
-
-// app.post('/login', (req, res) => {
-//     console.log(req.body.userToken)
-//     res.status(200).send({userToken: req.body.userToken})
-// })
-
-// app.post('/login', (req, res) => {
-//     var user = new User();
-//     console.log(req.user.uid)
-//     res.status(200).send(req.user.uid)
-// })
-
-// app.get('/', (req, res) => {
-//     var obj = {
-//         "name": "Test"
-//     }
-
-//     res.send(obj)
-// })
+app.post('/task/add', authenticateUser, (req, res) => {
+    var newTask = new Task()
+    newTask.title = req.body.title
+    newTask.description = req.body.description
+    newTask.startDate = req.body.startDate
+    newTask.dueDate = req.body.dueDate
+    newTask.owner = req.body.owner
+    newTask.save().then((savedTask) => {
+        console.log(`Successfully saved task: ${savedTask} by ${savedTask.owner}`)
+        res.status(200).send(newTask)
+    }).catch((err) => {
+        console.log(err)
+        res.sendStatus(500)
+    })
+})
 
 
 
 
-app.listen(4001, () => {
-    console.log("Running on port 4001")
+
+
+
+app.listen(PORT, () => {
+    console.log(`Running on port ${PORT}`)
 })
 

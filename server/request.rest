@@ -1,1 +1,11 @@
 GET http://localhost:4001/test
+
+###
+
+POST http://localhost:4001/task/add
+Content-Type: application/json
+
+
+{
+    "firstName": "Fredde"
+}

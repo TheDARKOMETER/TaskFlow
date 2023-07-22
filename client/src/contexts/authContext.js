@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useContext } from 'react'
 import { auth } from '../firebase'
 import { createUserWithEmailAndPassword, signOut, signInWithEmailAndPassword, sendPasswordResetEmail, updateProfile, updatePassword, getIdToken } from 'firebase/auth'
+import HttpService from '../services/http-service'
 
 const AuthContext = React.createContext()
 
@@ -11,6 +12,8 @@ export function useAuth() {
 export default function AuthProvider({ children }) {
     const [currentUser, setCurrentUser] = useState()
     const [loading, setLoading] = useState(true)
+
+    const http = new HttpService()
 
     function signup(email, password) {
         return createUserWithEmailAndPassword(auth, email, password).then((userCredential) => {
@@ -42,13 +45,18 @@ export default function AuthProvider({ children }) {
         return signInWithEmailAndPassword(auth, email, password).then((userCredential) => {
             // userCredential.user.getIdToken().then((token) => console.log(token))  <-- Gets the token of the current user
             setCurrentUser(userCredential.user)
+            console.log(currentUser)
+            setLoading(false)
+            return userCredential.user
         }).catch((err) => {
             throw new Error(err.message.replace('Firebase: Error ', ''))
         })
     }
 
-    function getUserToken() {
-        return getIdToken(auth.currentUser)
+    function getUserToken(user) {
+        return getIdToken(user).catch(err => {
+            throw new Error(err.message.replace('Firebase: Error ', ''))
+        })
     }
 
     function logout() {
@@ -61,17 +69,16 @@ export default function AuthProvider({ children }) {
 
     useEffect(() => {
         const unsubscribe = auth.onAuthStateChanged((user) => {
-            setLoading(false)
             setCurrentUser(user)
+            setLoading(false)
         })
         return unsubscribe
     }, [])
 
-    useEffect(() => {
-        const notifyChange = console.log(currentUser)
-
-        return notifyChange
-    }, [currentUser])
+    // useEffect(() => {
+    //     const notifyChange = console.log(currentUser)
+    //     return notifyChange
+    // }, [currentUser])
 
     const value = {
         currentUser,

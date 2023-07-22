@@ -12,7 +12,7 @@ export default function SignIn() {
     const http = new HttpService()
     const emailRef = useRef()
     const passwordRef = useRef()
-    const { signin, getUserToken } = useAuth()
+    const { signin, currentUser, getUserToken } = useAuth()
     const [error, setError] = useState('')
     const [loading, setLoading] = useState(false)
     const navigate = useNavigate()
@@ -23,13 +23,10 @@ export default function SignIn() {
         try {
             setError('')
             setLoading(true)
-            await signin(emailRef.current.value, passwordRef.current.value)
-            // const uid = await getUserToken()
-            // const response = await http.testGetToken(uid)
-            // http.testTokenAuthorizaion(uid).then(data => {
-            //     console.log(data)
-            // })
-            // console.log(response)
+            const user = await signin(emailRef.current.value, passwordRef.current.value)
+            const uidToken = await getUserToken(user)
+            console.log(uidToken)
+            await http.loginUser(uidToken, user.uid)
             navigate('/')
         } catch (err) {
             setError(`Failed to log in ${err}`)
