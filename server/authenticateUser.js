@@ -1,6 +1,6 @@
 var admin = require("firebase-admin");
 
-var serviceAccount = require("./admin-config/taskflow-443cf-firebase-adminsdk-xxmeg-6d17565d37.json");
+var serviceAccount = require("./admin-config/taskflow-443cf-firebase-adminsdk-xxmeg-59f39566da.json");
 
 admin.initializeApp({
     credential: admin.credential.cert(serviceAccount)
