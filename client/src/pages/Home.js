@@ -33,7 +33,7 @@ export default function Home() {
                                     Say goodbye to productivity roadblocks and hello to TaskFlow – your ultimate
                                     task management solution. TaskFlow empowers individuals, teams, and businesses
                                     to stay organized, focused, and on top of their work.</p>
-                                <Link to='/signup' className='w-50 btn btn-dark'>Get Started</Link>
+                                <Link to='/signup' className='w-50 mb-3 btn btn-dark'>Get Started</Link>
 
 
                             </Col>
