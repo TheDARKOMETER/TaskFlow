@@ -48,12 +48,13 @@ startDBServer()
 
 app.get('/dashboard', authenticateUser, (req, res) => {
     // TODO: Once get request at path /dashboard is sent, load the task data for the user
-    res.status(200).send("You are authorized to see this")
-})
-
-app.get('/dashboard', authenticateUser, (req, res) => {
-    // TODO: Once get request at path /dashboard is sent, load the task data for the user
-    res.status(200).send("You are authorized to see this")
+    Task.find({ owner: req.user.uid }).then(tasks => {
+        console.log(tasks)
+        console.log("Sending data to client")
+        res.status(200).send(tasks)
+    }).catch(() => {
+        res.status(500).send({ "error": "an error has occured" })
+    })
 })
 
 

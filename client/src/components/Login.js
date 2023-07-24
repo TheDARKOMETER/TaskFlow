@@ -24,9 +24,6 @@ export default function SignIn() {
             setError('')
             setLoading(true)
             const user = await signin(emailRef.current.value, passwordRef.current.value)
-            const uidToken = await getUserToken(user)
-            console.log(uidToken)
-            await http.loginUser(uidToken, user.uid)
             navigate('/')
         } catch (err) {
             setError(`Failed to log in ${err}`)

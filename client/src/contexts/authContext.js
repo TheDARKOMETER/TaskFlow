@@ -48,15 +48,25 @@ export default function AuthProvider({ children }) {
             console.log(currentUser)
             setLoading(false)
             return userCredential.user
+        }).then(async (user) => {
+            try {
+                const token = await getUserToken(user)
+                http.loginUser(token, user.uid)
+            } catch(err) {
+                throw err
+            }
         }).catch((err) => {
             throw new Error(err.message.replace('Firebase: Error ', ''))
         })
     }
 
+
+
     function getUserToken(user) {
-        return getIdToken(user).catch(err => {
+        const token = getIdToken(user).catch(err => {
             throw new Error(err.message.replace('Firebase: Error ', ''))
         })
+        return token
     }
 
     function logout() {

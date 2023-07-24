@@ -56,7 +56,7 @@ class HttpService {
         })
     }
 
-    loadUserDashboard = (authToken, url) => {
+    loadUserDashboard = (authToken) => {
         return new Promise((res, rej) => {
             axios.get('http://localhost:4001/dashboard', {
                 headers: {
