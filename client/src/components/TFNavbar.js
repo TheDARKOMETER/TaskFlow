@@ -20,17 +20,15 @@ export default function TFNavbar() {
         setExpanded(!expanded);
     };
 
-
     useEffect(() => {
         const handleResize = () => {
-            setIsMobileView(window.innerWidth <= 768); // Adjust the breakpoint as per your needs
+            setIsMobileView(window.innerWidth <= 992); // Adjust the breakpoint as per your needs
         };
 
         handleResize(); // Check initial window width
         window.addEventListener('resize', handleResize);
         return () => window.removeEventListener('resize', handleResize);
     }, []);
-
 
     return (
         <Navbar expand='lg' expanded={expanded} onToggle={onToggle} style={{ fontSize: '1.1rem', fontWeight: '500', borderBottom: 'solid', borderColor: 'black', borderWidth: '1px', textAlign: 'center' }} className='bg-body-tertiary'>
