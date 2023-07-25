@@ -46,7 +46,7 @@ const checkIfUserExists = (firebaseUid) => new Promise((res, rej) => {
 
 startDBServer()
 
-app.get('/dashboard', authenticateUser, (req, res) => {
+app.get('/tasks/all', authenticateUser, (req, res) => {
     // TODO: Once get request at path /dashboard is sent, load the task data for the user
     Task.find({ owner: req.user.uid }).then(tasks => {
         console.log(tasks)
@@ -96,8 +96,11 @@ app.post('/signup', authenticateUser, (req, res) => {
 
 app.post('/task/add', authenticateUser, (req, res) => {
     var newTask = new Task()
-    newTask.title = req.body.title
-    newTask.description = req.body.description
+    console.log(req.body.title)
+    if (req.body.title) {
+        newTask.title = req.body.title
+    }
+    newTask.description = req.body.description.replace(/%0D%0A|(%0A)/g, '\r\n');
     newTask.startDate = req.body.startDate
     newTask.dueDate = req.body.dueDate
     newTask.owner = req.body.owner
@@ -105,8 +108,8 @@ app.post('/task/add', authenticateUser, (req, res) => {
         console.log(`Successfully saved task: ${savedTask} by ${savedTask.owner}`)
         res.status(200).send(newTask)
     }).catch((err) => {
-        console.log(err)
-        res.sendStatus(500)
+        console.log(`${err} --- Error`)
+        res.status(500).send({ error: err.message })
     })
 })
 

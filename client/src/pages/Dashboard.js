@@ -8,14 +8,25 @@ import "react-datepicker/dist/react-datepicker.css";
 import HttpService from '../services/http-service'
 import { useNavigate } from 'react-router-dom'
 import TaskItem from '../components/TaskItem'
+import DataService from '../services/data-service'
+import NotificationService, { NOTIF_TASK_CHANGED } from '../services/notification-service'
 
 export default function Dashboard() {
+
+    //  SERVICES
     const http = new HttpService()
+    const ns = new NotificationService()
+    const ds = new DataService()
+
+    //  REFS
     const taskNameRef = useRef()
     const descriptionRef = useRef()
     const navigate = useNavigate()
 
+    //  AUTH CONTEXT
     const { currentUser, getUserToken } = useAuth()
+
+    //  STATES
     const [startDate, setStartDate] = useState(new Date())
     const [dueDate, setDueDate] = useState(new Date())
     const [error, setError] = useState('')
@@ -25,7 +36,7 @@ export default function Dashboard() {
 
     const loadData = async () => {
         const uidToken = await getUserToken(currentUser)
-        http.loadUserDashboard(uidToken).then(data => {
+        ds.getTasks(uidToken).then(data => {
             setTasks(data)
         }).catch((err) => {
             (err.code === "ERR_NETWORK") ? setError("Connection to server lost. Try again later") : navigate('/auth/unauthorized')
@@ -35,25 +46,36 @@ export default function Dashboard() {
     const renderTasks = () => {
         return tasks.map((task) => {
             return (
-                <div>
-                    <TaskItem key={task._id} title={task.title} description={task.description} />
-                </div>
+                <Col sm='4' key={task._id}>
+                    <TaskItem task={task} />
+                </Col>
             )
         });
     };
 
 
-    const addTask = () => {
+    const addTask = (e) => {
+        e.preventDefault()
         setError('')
         setMessage('')
-        http.addTask(uidToken, taskNameRef.current.value, descriptionRef.current.value, startDate.toUTCString(), dueDate.toUTCString(), currentUser.uid)
+        ds.addTask(uidToken, taskNameRef.current.value, descriptionRef.current.value, startDate, dueDate, currentUser.uid)
             .then(response => {
                 console.log(response)
-                setMessage(`Task "${response.title}" has been added successfully.`)
-                setTasks(prevTasks => [...prevTasks, response])
-            }).catch(() => {
-                setError(`An error has occcured DEBUG TIME: ${startDate.toUTCString()} |  ${dueDate.toUTCString()}`)
-            })
+                setMessage(`Task "${taskNameRef.current.value}" has been added successfully.`)
+            }).catch((err) => {
+                setError(`An error has occcured ${err}`)
+            }).finally(resetInput)
+    }
+
+    const resetInput = () => {
+        taskNameRef.current.value = ""
+        descriptionRef.current.value = ""
+        setStartDate(Date.now())
+        setDueDate(Date.now())
+    }
+
+    const onTaskChanged = (newTasks) => {
+        setTasks(newTasks)
     }
 
     useEffect(() => {
@@ -71,6 +93,8 @@ export default function Dashboard() {
             console.log(err)
         })
 
+        ns.addObserver(NOTIF_TASK_CHANGED, onTaskChanged)
+
     }, [])
 
 
@@ -79,14 +103,6 @@ export default function Dashboard() {
             loadData()
         }
     }, [uidToken])
-
-    // useEffect(() => {
-    //     renderTasks()
-    // }, [tasks])
-
-    // useEffect(() => {
-    //     alert(startDate.toISOString())
-    // }, [startDate])
 
     return (
 
@@ -101,14 +117,14 @@ export default function Dashboard() {
                                 {message && <Alert variant='success'>{message}</Alert>}
                                 {error && <Alert variant='danger'>{error}</Alert>}
                                 <Card.Title>Create a task</Card.Title>
-                                <Form>
+                                <Form onSubmit={addTask}>
                                     <Form.Group className="mb-3">
                                         <Form.Label>Task Name</Form.Label>
                                         <Form.Control ref={taskNameRef} type="text" placeholder="Enter task name" />
                                     </Form.Group>
                                     <Form.Group className="mb-3">
                                         <Form.Label>Description</Form.Label>
-                                        <Form.Control ref={descriptionRef} type="text" placeholder="Description" />
+                                        <Form.Control required ref={descriptionRef} as='textarea' rows={5} placeholder="Description" />
                                     </Form.Group>
                                     <Form.Group className='mb-3'>
                                         <Form.Label>Start Date</Form.Label>
@@ -120,7 +136,7 @@ export default function Dashboard() {
                                         <Form.Label>Due Date</Form.Label>
                                         <div><DatePicker selected={dueDate} onChange={(date) => setDueDate(date)} /></div>
                                     </Form.Group>
-                                    <Button onClick={addTask} variant="dark">
+                                    <Button type='submit' variant="dark">
                                         Create Task
                                     </Button>
                                 </Form>
@@ -130,14 +146,7 @@ export default function Dashboard() {
                     <Col />
                 </Row>
                 <Row>
-                    <Col />
-                    <Col md='9'>
-                        <div>
-                            {renderTasks()}
-                        </div>
-
-                    </Col>
-                    <Col />
+                    {renderTasks()}
                 </Row>
             </PageDiv>) : (<RedirectHome />)}
         </>

@@ -17,6 +17,7 @@ class HttpService {
             }).then(response => {
                 res(response.data)
             }).catch(err => {
+                console.log(err)
                 rej(err)
             })
         })
@@ -56,9 +57,9 @@ class HttpService {
         })
     }
 
-    loadUserDashboard = (authToken) => {
+    getTasks = (authToken) => {
         return new Promise((res, rej) => {
-            axios.get('http://localhost:4001/dashboard', {
+            axios.get('http://localhost:4001/tasks/all', {
                 headers: {
                     'Authorization': `Bearer ${authToken}`
                 }
@@ -69,45 +70,6 @@ class HttpService {
             })
         })
     }
-
-    // testAuth = () => {
-
-    // }
-
-
-    // testGetMethod = () => {
-    //     var message = new Promise((res, rej) => {
-    //         axios.get('http://localhost:4001/test').then(response => {
-    //             res(response.data)
-    //         }
-    //         ).catch((err) => {
-    //             rej(err)
-    //         })
-    //     })
-
-    // var message = new Promise((res, rej) => {
-    //     fetch('http://localhost:4001/test').then(response => {
-    //         res(response.json())
-    //     }).catch(err => {
-    //         rej(err)
-    //     })
-    // })
-
-    //     return message
-    // }
-
-    // testGetToken = (authToken) => {
-    //     console.log(authToken)
-    //     return new Promise((res, rej) => {
-    //         axios.post('http://localhost:4001/login', { userToken: authToken }).then(response => {
-    //             res(response.data)
-    //         }
-    //         ).catch((err) => {
-    //             rej(err)
-    //         })
-    //     })
-    // }
-
 
 }
 
