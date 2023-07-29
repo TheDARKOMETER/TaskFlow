@@ -2,17 +2,20 @@ import HttpService from "./http-service"
 import NotificationService, { NOTIF_TASK_CHANGED } from "./notification-service"
 
 let instance = null
-const http = new HttpService()
+let http
 const ns = new NotificationService()
 class DataService {
     constructor() {
-        return instance ? this : instance
+        if (!instance) {
+            instance = this
+        }
+        return instance
     }
 
-    addTask = (authToken, title, description, startDate, dueDate, owner) => {
-        return http.addTask(authToken, title, description, startDate, dueDate, owner)
+    addTask = (title, description, startDate, dueDate, owner) => {
+        return http.addTask(title, description, startDate, dueDate, owner)
             .then(() => {
-                return this.getTasks(authToken).catch((err) => {
+                return this.getTasks().catch((err) => {
                     throw err
                 })
             }).then(response => {
@@ -23,8 +26,12 @@ class DataService {
             })
     }
 
-    getTasks = (authToken) => {
-        return http.getTasks(authToken)
+    getTasks = () => {
+        return http.getTasks()
+    }
+
+    setHttpAuth = (authToken) => {
+        http = new HttpService(authToken)
     }
 }
 

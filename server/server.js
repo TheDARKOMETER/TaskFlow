@@ -10,7 +10,6 @@ const Task = require('./models/task')
 const User = require('./models/user');
 const bodyParser = require('body-parser');
 
-// app.use(authenticateUser)
 
 app.use(
     cors({
@@ -19,7 +18,7 @@ app.use(
         credentials: true,
         optionsSuccessStatus: 204, // Optional: Returns 204 No Content for pre-flight requests
 
-    })  
+    })
 )
 
 app.use(express.json())
@@ -35,24 +34,38 @@ const startDBServer = async () => {
     }
 }
 
-const checkIfUserExists = (firebaseUid) => new Promise((res, rej) => {
+const checkIfUserExists = (firebaseUid) => {
     console.log("Executing looking for " + firebaseUid)
-    User.find({ firebaseUid }).then((result) => {
-        return res(result.length > 0)
+    return User.find({ firebaseUid }).then((result) => {
+        return result.length > 0
     }).catch((err) => {
-        return rej(err)
+        throw err
     })
-})
+}
 
 startDBServer()
 
 app.get('/tasks/all', authenticateUser, (req, res) => {
-    // TODO: Once get request at path /dashboard is sent, load the task data for the user
+    // TODO: Fix the updation of tasks
     Task.find({ owner: req.user.uid }).then(tasks => {
         console.log(tasks)
         console.log("Sending data to client")
-        res.status(200).send(tasks)
-    }).catch(() => {
+        if (tasks.length > 0) {
+            const updateTasks = tasks.map((task) => {
+                if (task.dueDate < Date.now) {
+                    task.missed = true
+                }
+                return task.save({ validateBeforeSave: false })
+            })
+            return Promise.all(updateTasks)
+        } else {
+            return tasks
+        }
+    }).then((updatedTasks) => {
+        console.log("Task data has been updated succesfully")
+        res.status(200).send(updatedTasks)
+    }).catch((err) => {
+        console.log(err)
         res.status(500).send({ "error": "an error has occured" })
     })
 })

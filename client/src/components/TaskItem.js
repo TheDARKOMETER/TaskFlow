@@ -2,8 +2,10 @@ import React from 'react'
 import { Card, Button } from 'react-bootstrap'
 
 export default function TaskItem(props) {
+    const startDate = new Date(props.task.startDate)
+    const dueDate = new Date(props.task.dueDate)
     return (
-        <Card>
+        <Card style={{ minHeight: '500px' }}>
             <Card.Header as="h5"><div style={{
                 display: 'flex',
                 alignItems: 'center',
@@ -21,11 +23,16 @@ export default function TaskItem(props) {
                 </Card.Text>
             </Card.Body>
             <Card.Body>
-                <Card.Text>Start Date: {props.task.startDate}</Card.Text>
-                <Card.Text>Due Date: {props.task.dueDate}</Card.Text>
+                <Card.Text>Start Date: {startDate.toLocaleDateString()}</Card.Text>
+                <Card.Text>Due Date: {dueDate.toLocaleDateString()}</Card.Text>
                 <Card.Text>Completed: <span style={{
-                    ...(props.task.completed ? { color: 'green' } : { color: 'red' })
+                    ...(props.task.completed ? { color: 'green' } : { color: 'red' }),
+                    fontWeight: 'bold'
                 }}>{props.task.completed ? "Yes" : "No"}</span></Card.Text>
+                <Card.Text>Missed: <span style={{
+                    ...(props.task.missed ? { color: 'red' } : { color: 'green' }),
+                    fontWeight: 'bold'
+                }}>{props.task.missed ? "Yes" : "No"}</span></Card.Text>
                 <Button variant='primary'>Mark as Complete</Button>
             </Card.Body>
         </Card >

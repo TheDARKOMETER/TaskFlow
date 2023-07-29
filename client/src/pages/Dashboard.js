@@ -1,22 +1,31 @@
-import React, { useEffect, useRef, useState } from 'react'
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import PageDiv from '../components/PageDiv'
 import { useAuth } from '../contexts/authContext'
 import { Row, Col, Button, Form, Card, Alert } from 'react-bootstrap'
 import RedirectHome from '../components/RedirectHome'
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
-import HttpService from '../services/http-service'
 import { useNavigate } from 'react-router-dom'
 import TaskItem from '../components/TaskItem'
 import DataService from '../services/data-service'
 import NotificationService, { NOTIF_TASK_CHANGED } from '../services/notification-service'
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import { faSpinner } from '@fortawesome/free-solid-svg-icons'
 
 export default function Dashboard() {
 
+    //  STATES
+    const [startDate, setStartDate] = useState(new Date())
+    const [dueDate, setDueDate] = useState(new Date())
+    const [error, setError] = useState('')
+    const [message, setMessage] = useState('')
+    const [uidToken, setUidToken] = useState()
+    const [tasks, setTasks] = useState([])
+    const [loading, setLoading] = useState(true)
+
     //  SERVICES
-    const http = new HttpService()
-    const ns = new NotificationService()
-    const ds = new DataService()
+    const ns = useMemo(() => new NotificationService(), [])
+    const ds = useMemo(() => new DataService(), [])
 
     //  REFS
     const taskNameRef = useRef()
@@ -26,22 +35,19 @@ export default function Dashboard() {
     //  AUTH CONTEXT
     const { currentUser, getUserToken } = useAuth()
 
-    //  STATES
-    const [startDate, setStartDate] = useState(new Date())
-    const [dueDate, setDueDate] = useState(new Date())
-    const [error, setError] = useState('')
-    const [message, setMessage] = useState('')
-    const [uidToken, setUidToken] = useState()
-    const [tasks, setTasks] = useState([])
-
-    const loadData = async () => {
-        const uidToken = await getUserToken(currentUser)
-        ds.getTasks(uidToken).then(data => {
-            setTasks(data)
-        }).catch((err) => {
-            (err.code === "ERR_NETWORK") ? setError("Connection to server lost. Try again later") : navigate('/auth/unauthorized')
-        })
-    }
+    const loadData = useCallback(async () => {
+        try {
+            ds.getTasks().then(data => {
+                setTasks(data)
+            }).catch((err) => {
+                (err.code === "ERR_NETWORK") ? setError("Connection to server lost. Try again later") : navigate('/auth/unauthorized')
+            })
+        } catch (err) {
+            setError("An error has occured")
+        } finally {
+            setLoading(false)
+        }
+    }, [ds, navigate])
 
     const renderTasks = () => {
         return tasks.map((task) => {
@@ -58,7 +64,7 @@ export default function Dashboard() {
         e.preventDefault()
         setError('')
         setMessage('')
-        ds.addTask(uidToken, taskNameRef.current.value, descriptionRef.current.value, startDate, dueDate, currentUser.uid)
+        ds.addTask(taskNameRef.current.value, descriptionRef.current.value, startDate, dueDate, currentUser.uid)
             .then(response => {
                 console.log(response)
                 setMessage(`Task "${taskNameRef.current.value}" has been added successfully.`)
@@ -92,20 +98,19 @@ export default function Dashboard() {
         }).catch(err => {
             console.log(err)
         })
-
         ns.addObserver(NOTIF_TASK_CHANGED, onTaskChanged)
-
-    }, [])
+    }, [currentUser, getUserToken, ns])
 
 
     useEffect(() => {
         if (uidToken) {
+            ds.setHttpAuth(uidToken)
             loadData()
         }
-    }, [uidToken])
+    }, [uidToken, loadData, ds])
+
 
     return (
-
         <>
             {currentUser ? (<PageDiv isBackGroundWhite={true}>
                 <Row>
@@ -114,6 +119,7 @@ export default function Dashboard() {
                         <h1>Welcome, {currentUser.displayName ?? currentUser.email}</h1>
                         <Card>
                             <Card.Body>
+                                {loading && <Alert variant='info'>{<FontAwesomeIcon style={{ marginRight: '1.2rem' }} icon={faSpinner} spin />}Loading tasks</Alert>}
                                 {message && <Alert variant='success'>{message}</Alert>}
                                 {error && <Alert variant='danger'>{error}</Alert>}
                                 <Card.Title>Create a task</Card.Title>

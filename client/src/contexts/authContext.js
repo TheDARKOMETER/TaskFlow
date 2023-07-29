@@ -13,11 +13,16 @@ export default function AuthProvider({ children }) {
     const [currentUser, setCurrentUser] = useState()
     const [loading, setLoading] = useState(true)
 
+    // TODO: Fix HttpService authToken
+
     const http = new HttpService()
 
     function signup(email, password) {
         return createUserWithEmailAndPassword(auth, email, password).then((userCredential) => {
             setCurrentUser(userCredential.user)
+            return userCredential.user
+        }).then((user) => {
+            http.signUpUser(user.uid)
         }).catch((err) => {
             throw new Error(err.message.replace('Firebase: Error ', ''))
         })
@@ -50,9 +55,8 @@ export default function AuthProvider({ children }) {
             return userCredential.user
         }).then(async (user) => {
             try {
-                const token = await getUserToken(user)
-                http.loginUser(token, user.uid)
-            } catch(err) {
+                http.loginUser(user.uid)
+            } catch (err) {
                 throw err
             }
         }).catch((err) => {
