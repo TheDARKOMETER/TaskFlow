@@ -14,12 +14,12 @@ const bodyParser = require('body-parser');
 
 app.use(
     cors({
-        origin: ['http://127.0.0.1:3000', 'http://localhost:3000'],
+        origin: ['http://127.0.0.1:3000', 'http://localhost:3001', 'http://localhost:3000'],
         methods: ['GET', 'POST', 'PUT', 'DELETE'],
         credentials: true,
         optionsSuccessStatus: 204, // Optional: Returns 204 No Content for pre-flight requests
 
-    })
+    })  
 )
 
 app.use(express.json())
