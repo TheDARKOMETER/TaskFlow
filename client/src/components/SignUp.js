@@ -1,19 +1,17 @@
-import React, { useRef, useState } from 'react'
+import React, { useEffect, useRef, useState } from 'react'
 import { Card, Form, Button, Alert } from 'react-bootstrap'
 import GSignIn from '../assets/1x/btn_google_signin_dark_normal_web.png'
 // import logo from '../assets/logo-no-icon.png'
 import { useAuth } from '../contexts/authContext'
 import { useNavigate, Link } from 'react-router-dom'
-import HttpService from '../services/http-service'
 
 export default function SignUp() {
     const emailRef = useRef()
     const passwordRef = useRef()
     const passwordConfirmRef = useRef()
-    const { signup } = useAuth()
+    const { signup, currentUser } = useAuth()
     const [error, setError] = useState('')
     const [loading, setLoading] = useState(false)
-    const http = new HttpService()
     const navigate = useNavigate()
 
     async function handleSubmit(e) {
@@ -32,6 +30,12 @@ export default function SignUp() {
         }
         setLoading(false)
     }
+
+    useEffect(() => {
+        if (currentUser) {
+            navigate('/')
+        }
+    }, [currentUser, navigate])
 
     return (
         <>

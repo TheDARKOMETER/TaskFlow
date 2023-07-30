@@ -1,18 +1,14 @@
-import React, { useRef, useState } from 'react'
+import React, { useEffect, useRef, useState } from 'react'
 import { Card, Form, Button, Alert } from 'react-bootstrap'
 import GSignIn from '../assets/1x/btn_google_signin_dark_normal_web.png'
 import { useAuth } from '../contexts/authContext'
 import { useNavigate, Link } from 'react-router-dom'
-import axios from 'axios'
-import HttpService from '../services/http-service'
-
 
 
 export default function SignIn() {
-    const http = new HttpService()
     const emailRef = useRef()
     const passwordRef = useRef()
-    const { signin, currentUser, getUserToken } = useAuth()
+    const { signin, currentUser } = useAuth()
     const [error, setError] = useState('')
     const [loading, setLoading] = useState(false)
     const navigate = useNavigate()
@@ -23,13 +19,19 @@ export default function SignIn() {
         try {
             setError('')
             setLoading(true)
-            const user = await signin(emailRef.current.value, passwordRef.current.value)
+            await signin(emailRef.current.value, passwordRef.current.value)
             navigate('/')
         } catch (err) {
             setError(`Failed to log in ${err}`)
         }
         setLoading(false)
     }
+
+    useEffect(() => {
+        if (currentUser) {
+            navigate('/')
+        }
+    }, [currentUser, navigate])
 
     return (
         <>

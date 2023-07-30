@@ -12,17 +12,22 @@ export function useAuth() {
 export default function AuthProvider({ children }) {
     const [currentUser, setCurrentUser] = useState()
     const [loading, setLoading] = useState(true)
+    const [actionType, setActionType] = useState('')
+    const [http, setHttp] = useState()
 
     // TODO: Fix HttpService authToken
-
-    const http = new HttpService()
 
     function signup(email, password) {
         return createUserWithEmailAndPassword(auth, email, password).then((userCredential) => {
             setCurrentUser(userCredential.user)
             return userCredential.user
         }).then((user) => {
-            http.signUpUser(user.uid)
+            getUserToken(user).then((token) => {
+                setHttp(new HttpService(token))
+                setActionType('signup')
+            }).catch((err) => {
+                throw err
+            })
         }).catch((err) => {
             throw new Error(err.message.replace('Firebase: Error ', ''))
         })
@@ -51,20 +56,31 @@ export default function AuthProvider({ children }) {
             // userCredential.user.getIdToken().then((token) => console.log(token))  <-- Gets the token of the current user
             setCurrentUser(userCredential.user)
             console.log(currentUser)
-            setLoading(false)
             return userCredential.user
-        }).then(async (user) => {
-            try {
-                http.loginUser(user.uid)
-            } catch (err) {
-                throw err
-            }
+        }).then((user) => {
+            getUserToken(user).then((token) => {
+                setHttp(new HttpService(token))
+                setActionType('signin')
+            })
         }).catch((err) => {
             throw new Error(err.message.replace('Firebase: Error ', ''))
         })
     }
 
-
+    useEffect(() => {
+        if (http && actionType && currentUser) {
+            switch (actionType) {
+                case 'signin':
+                    http.loginUser(currentUser.uid)
+                    break
+                case 'signup':
+                    http.signUpUser(currentUser.uid)
+                    break
+                default:
+                    return null
+            }
+        }
+    }, [http, actionType, currentUser])
 
     function getUserToken(user) {
         const token = getIdToken(user).catch(err => {
@@ -88,11 +104,6 @@ export default function AuthProvider({ children }) {
         })
         return unsubscribe
     }, [])
-
-    // useEffect(() => {
-    //     const notifyChange = console.log(currentUser)
-    //     return notifyChange
-    // }, [currentUser])
 
     const value = {
         currentUser,
