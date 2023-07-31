@@ -4,7 +4,10 @@ const observers = {}
 let instance = null
 class NotificationService {
     constructor() {
-        return instance ? instance : this
+        if (!instance) {
+            instance = this
+        }
+        return instance
     }
 
     addObserver = (notifName, callBack) => {

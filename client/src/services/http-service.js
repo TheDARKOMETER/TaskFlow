@@ -1,75 +1,85 @@
 import axios from "axios";
 import 'whatwg-fetch'
 
+const API_BASE_URL = "http://localhost:4001/"
+
 class HttpService {
-    addTask = (authToken, title, description, startDate, dueDate, owner) => {
-        return new Promise((res, rej) => {
-            axios.post('http://localhost:4001/task/add', {
-                title: title,
-                description: description,
-                startDate: startDate,
-                dueDate: dueDate,
-                owner: owner
-            }, {
-                headers: {
-                    'Authorization': `Bearer ${authToken}`
-                }
-            }).then(response => {
-                res(response.data)
-            }).catch(err => {
-                console.log(err)
-                rej(err)
-            })
+
+    constructor(authToken) {
+        this.api = axios.create({
+            baseURL: API_BASE_URL,
+            headers: {
+                'Authorization': `Bearer ${authToken}`
+            }
         })
     }
 
-    loginUser = (authToken, uid) => {
-        console.log(authToken)
-        return new Promise((res, rej) => {
-            axios.post('http://localhost:4001/login', {
-                firebaseUid: uid
-            }, {
-                headers: {
-                    'Authorization': `Bearer ${authToken}`
-                }
-            }).then(response => {
-                console.log(response.data)
-                res(response.data)
-            }).catch(err => {
-                rej(err)
-            })
+    addTask = (title, description, startDate, dueDate, owner) => {
+        return this.api.post('http://localhost:4001/task/add', {
+            title,
+            description,
+            startDate,
+            dueDate,
+            owner
+        }).then(response => {
+            return response.data
+        }).catch(err => {
+            console.log(err)
+            throw err
         })
     }
 
-    signUpUser = (authToken, uid) => {
-        return new Promise((res, rej) => {
-            axios.post('http://localhost:4001/signup', {
-                firebaseUid: uid
-            }, {
-                headers: {
-                    'Authorization': `Bearer ${authToken}`
-                }
-            }).then(response => {
-                res(response.data)
-            }).catch(err => {
-                rej(err)
-            })
+    updateTask = (newTask) => {
+        return this.api.put('http://localhost:4001/task/update', {
+            _id: newTask._id,
+            title: newTask.title,
+            description: newTask.description,
+            startdate: newTask.startDate,
+            dueDate: newTask.dueDate,
+            completed: newTask.completed
+        }).then(response => {
+            console.log("Task Updated Succesfully")
+            return response.data
+        }).catch(err => {
+            console.log("An error occured when updating task")
+            throw err
         })
     }
 
-    getTasks = (authToken) => {
-        return new Promise((res, rej) => {
-            axios.get('http://localhost:4001/tasks/all', {
-                headers: {
-                    'Authorization': `Bearer ${authToken}`
-                }
-            }).then(response => {
-                res(response.data)
-            }).catch(err => {
-                rej(err)
-            })
+
+
+    loginUser = (uid) => {
+        return this.api.post('http://localhost:4001/login', {
+            firebaseUid: uid
+        }).then(response => {
+            console.log(response.data)
+            return response.data
+        }).catch(err => {
+            throw err
         })
     }
+
+
+    signUpUser = (uid) => {
+        return this.api.post('http://localhost:4001/signup', {
+            firebaseUid: uid
+        }).then(response => {
+            return response.data
+        }).catch(err => {
+            throw err
+        })
+    }
+
+
+    getTasks = () => {
+        return this.api.get('http://localhost:4001/tasks/all'
+        ).then(response => {
+            return response.data
+        }).catch(err => {
+            throw err
+        })
+    }
+
 
 }
 

@@ -10,11 +10,10 @@ const Task = require('./models/task')
 const User = require('./models/user');
 const bodyParser = require('body-parser');
 
-// app.use(authenticateUser)
 
 app.use(
     cors({
-        origin: ['http://127.0.0.1:3000', 'http://localhost:3000'],
+        origin: ['http://127.0.0.1:3000', 'http://localhost:3001', 'http://localhost:3000'],
         methods: ['GET', 'POST', 'PUT', 'DELETE'],
         credentials: true,
         optionsSuccessStatus: 204, // Optional: Returns 204 No Content for pre-flight requests
@@ -35,24 +34,39 @@ const startDBServer = async () => {
     }
 }
 
-const checkIfUserExists = (firebaseUid) => new Promise((res, rej) => {
+const checkIfUserExists = (firebaseUid) => {
     console.log("Executing looking for " + firebaseUid)
-    User.find({ firebaseUid }).then((result) => {
-        return res(result.length > 0)
+    return User.find({ firebaseUid }).then((result) => {
+        return result.length > 0
     }).catch((err) => {
-        return rej(err)
+        throw err
     })
-})
+}
 
 startDBServer()
 
 app.get('/tasks/all', authenticateUser, (req, res) => {
-    // TODO: Once get request at path /dashboard is sent, load the task data for the user
     Task.find({ owner: req.user.uid }).then(tasks => {
         console.log(tasks)
         console.log("Sending data to client")
-        res.status(200).send(tasks)
-    }).catch(() => {
+        if (tasks.length > 0) {
+            const updateTasks = tasks.map((task) => {
+                if (new Date(task.dueDate).toLocaleDateString() < new Date(Date.now()).toLocaleDateString()) {
+                    task.missed = true
+                }
+                console.log(new Date(task.dueDate).toLocaleDateString())
+                return task.save({ validateBeforeSave: false })
+            })
+            return Promise.all(updateTasks)
+        } else {
+            return tasks
+        }
+    }).then((updatedTasks) => {
+        console.log(new Date(Date.now()).toLocaleDateString())
+        console.log("Task data has been updated succesfully")
+        res.status(200).send(updatedTasks)
+    }).catch((err) => {
+        console.log(err)
         res.status(500).send({ "error": "an error has occured" })
     })
 })
@@ -103,7 +117,7 @@ app.post('/task/add', authenticateUser, (req, res) => {
     newTask.description = req.body.description.replace(/%0D%0A|(%0A)/g, '\r\n');
     newTask.startDate = req.body.startDate
     newTask.dueDate = req.body.dueDate
-    newTask.owner = req.body.owner
+    newTask.owner = req.user.uid
     newTask.save().then((savedTask) => {
         console.log(`Successfully saved task: ${savedTask} by ${savedTask.owner}`)
         res.status(200).send(newTask)
@@ -113,11 +127,22 @@ app.post('/task/add', authenticateUser, (req, res) => {
     })
 })
 
-
-
-
-
-
+app.put('/task/update', authenticateUser, (req, res) => {
+    console.log("Trying to update")
+    Task.updateOne({ _id: req.body._id }, {
+        title: req.body.title,
+        description: req.body.description,
+        startDate: req.body.startDate,
+        dueDate: req.body.dueDate,
+        completed: req.body.completed
+    }).then(() => {
+        console.log("Task Updated Succesfully")
+        res.sendStatus(200)
+    }).catch((err) => {
+        console.log(err)
+        res.status(500).send({ error: err })
+    })
+})
 
 app.listen(PORT, () => {
     console.log(`Running on port ${PORT}`)
