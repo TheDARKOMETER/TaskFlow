@@ -52,9 +52,10 @@ app.get('/tasks/all', authenticateUser, (req, res) => {
         console.log("Sending data to client")
         if (tasks.length > 0) {
             const updateTasks = tasks.map((task) => {
-                if (task.dueDate < Date.now) {
+                if (new Date(task.dueDate).toLocaleDateString() < new Date(Date.now()).toLocaleDateString()) {
                     task.missed = true
                 }
+                console.log(new Date(task.dueDate).toLocaleDateString())
                 return task.save({ validateBeforeSave: false })
             })
             return Promise.all(updateTasks)
@@ -62,6 +63,7 @@ app.get('/tasks/all', authenticateUser, (req, res) => {
             return tasks
         }
     }).then((updatedTasks) => {
+        console.log(new Date(Date.now()).toLocaleDateString())
         console.log("Task data has been updated succesfully")
         res.status(200).send(updatedTasks)
     }).catch((err) => {
@@ -116,7 +118,7 @@ app.post('/task/add', authenticateUser, (req, res) => {
     newTask.description = req.body.description.replace(/%0D%0A|(%0A)/g, '\r\n');
     newTask.startDate = req.body.startDate
     newTask.dueDate = req.body.dueDate
-    newTask.owner = req.body.owner
+    newTask.owner = req.user.uid
     newTask.save().then((savedTask) => {
         console.log(`Successfully saved task: ${savedTask} by ${savedTask.owner}`)
         res.status(200).send(newTask)
@@ -125,11 +127,6 @@ app.post('/task/add', authenticateUser, (req, res) => {
         res.status(500).send({ error: err.message })
     })
 })
-
-
-
-
-
 
 
 app.listen(PORT, () => {

@@ -33,7 +33,7 @@ export default function TaskItem(props) {
                     ...(props.task.missed ? { color: 'red' } : { color: 'green' }),
                     fontWeight: 'bold'
                 }}>{props.task.missed ? "Yes" : "No"}</span></Card.Text>
-                <Button variant='primary'>Mark as Complete</Button>
+                <Button variant='dark'>Mark as Complete</Button>
             </Card.Body>
         </Card >
     )

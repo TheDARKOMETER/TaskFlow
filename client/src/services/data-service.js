@@ -12,8 +12,8 @@ class DataService {
         return instance
     }
 
-    addTask = (title, description, startDate, dueDate, owner) => {
-        return http.addTask(title, description, startDate, dueDate, owner)
+    addTask = (title, description, startDate, dueDate) => {
+        return http.addTask(title, description, startDate, dueDate)
             .then(() => {
                 return this.getTasks().catch((err) => {
                     throw err
