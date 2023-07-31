@@ -1,6 +1,10 @@
-var admin = require("firebase-admin");
+const admin = require("firebase-admin");
+const dotenv = require('dotenv')
 
-var serviceAccount = require("./admin-config/taskflow-443cf-firebase-adminsdk-xxmeg-6d17565d37.json");
+dotenv.config({path: '.env.local'})
+const serviceAccount = require(process.env.ADMIN_CONFIG_PATH);
+
+
 
 admin.initializeApp({
     credential: admin.credential.cert(serviceAccount)

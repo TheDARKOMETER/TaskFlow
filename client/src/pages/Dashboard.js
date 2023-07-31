@@ -46,7 +46,7 @@ export default function Dashboard() {
     const renderTasks = () => {
         return tasks.map((task) => {
             return (
-                <Col sm='4' key={task._id}>
+                <Col className='mt-3' sm='4' key={task._id}>
                     <TaskItem task={task} />
                 </Col>
             )
@@ -145,7 +145,7 @@ export default function Dashboard() {
                     </Col>
                     <Col />
                 </Row>
-                <Row>
+                <Row className='d-flex justify-content-center'>
                     {renderTasks()}
                 </Row>
             </PageDiv>) : (<RedirectHome />)}
