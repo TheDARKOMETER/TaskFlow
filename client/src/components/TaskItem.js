@@ -21,7 +21,13 @@ export default function TaskItem(props) {
                 alignItems: 'center',
                 justifyContent: 'space-between'
             }}>
-                <div>Task</div>
+                <div style={{
+                    color: props.task.completed ? 'green' : props.task.missed ? 'red' : 'black'
+                }}>{props.task.completed
+                    ? "(Completed)"
+                    : (props.task.missed
+                        ? "(Missed)"
+                        : "(Due)")}</div>
                 <div style={{ fontSize: '0.6rem' }}>ID: {props.task._id}</div>
             </div></Card.Header>
             <Card.Body>

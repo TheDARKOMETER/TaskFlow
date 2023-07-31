@@ -1,7 +1,7 @@
 import React, { useCallback, useEffect, useMemo, useReducer, useState } from 'react'
 import PageDiv from '../components/PageDiv'
 import { useAuth } from '../contexts/authContext'
-import { Row, Col, Card, Alert } from 'react-bootstrap'
+import { Row, Col, Card, Alert, Button } from 'react-bootstrap'
 import RedirectHome from '../components/RedirectHome'
 import "react-datepicker/dist/react-datepicker.css";
 import { useNavigate } from 'react-router-dom'
@@ -19,7 +19,6 @@ function dashboardReducer(state, action) {
             const { tasks } = action.payload
             let missedTasks = []
             let completedTasks = []
-            console.log(tasks)
             tasks.forEach(task => {
                 task.missed && missedTasks.push(task)
                 task.completed && completedTasks.push(task)
@@ -38,6 +37,7 @@ export default function Dashboard() {
     const [uidToken, setUidToken] = useState()
     const [tasks, setTasks] = useState([])
     const [loading, setLoading] = useState(true)
+    const [filter, setFilter] = useState()
     const navigate = useNavigate()
 
     //  REDUCER
@@ -159,6 +159,11 @@ export default function Dashboard() {
                     <Row className='pb-5'>
                         <Col className='text-center'>
                             <h1>Your tasks</h1>
+                            <div>
+                            <Button style={{ fontSize: '1em', color: 'black', textDecoration:'none' }} variant='link'>All Tasks</Button>
+                                <Button style={{ fontSize: '1em', color: 'black' }} variant='link'>Due Tasks</Button>
+                                <Button style={{ fontSize: '1em', color: 'black' }} variant='link'>Missed Tasks</Button>
+                            </div>
                         </Col>
                     </Row>
                     <Row className='d-flex justify-content-center'>
