@@ -127,6 +127,22 @@ app.post('/task/add', authenticateUser, (req, res) => {
     })
 })
 
+app.put('/task/update', authenticateUser, (req, res) => {
+    console.log("Trying to update")
+    Task.updateOne({ _id: req.body._id }, {
+        title: req.body.title,
+        description: req.body.description,
+        startDate: req.body.startDate,
+        dueDate: req.body.dueDate,
+        completed: req.body.completed
+    }).then(() => {
+        console.log("Task Updated Succesfully")
+        res.sendStatus(200)
+    }).catch((err) => {
+        console.log(err)
+        res.status(500).send({ error: err })
+    })
+})
 
 app.listen(PORT, () => {
     console.log(`Running on port ${PORT}`)

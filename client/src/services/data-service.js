@@ -2,36 +2,48 @@ import HttpService from "./http-service"
 import NotificationService, { NOTIF_TASK_CHANGED } from "./notification-service"
 
 let instance = null
-let http
-const ns = new NotificationService()
 class DataService {
-    constructor() {
+    constructor(httpService) {
         if (!instance) {
             instance = this
         }
+        this.http = httpService
+        this.ns = new NotificationService()
         return instance
     }
 
     addTask = (title, description, startDate, dueDate) => {
-        return http.addTask(title, description, startDate, dueDate)
+        return this.http.addTask(title, description, startDate, dueDate)
             .then(() => {
-                return this.getTasks().catch((err) => {
-                    throw err
-                })
-            }).then(response => {
-                ns.postNotification(NOTIF_TASK_CHANGED, response)
-                return response
-            }).catch(err => {
+                return this.getTasks()
+            })
+            .then(tasks => {
+                this.ns.postNotification(NOTIF_TASK_CHANGED, tasks)
+            })
+            .catch(err => {
                 throw err
             })
     }
 
     getTasks = () => {
-        return http.getTasks()
+        return this.http.getTasks()
+    }
+
+    updateTask = (task) => {
+        return this.http.updateTask(task)
+            .then(() => {
+                return this.getTasks()
+            })
+            .then(tasks => {
+                this.ns.postNotification(NOTIF_TASK_CHANGED, tasks)
+            })
+            .catch(err => {
+                throw err
+            })
     }
 
     setHttpAuth = (authToken) => {
-        http = new HttpService(authToken)
+        this.http = new HttpService(authToken)
     }
 }
 

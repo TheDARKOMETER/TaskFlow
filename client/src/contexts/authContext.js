@@ -11,6 +11,7 @@ export function useAuth() {
 
 export default function AuthProvider({ children }) {
     const [currentUser, setCurrentUser] = useState()
+    const [userToken, setUserToken] = useState()
     const [loading, setLoading] = useState(true)
     const [actionType, setActionType] = useState('')
     const [http, setHttp] = useState()
@@ -83,10 +84,9 @@ export default function AuthProvider({ children }) {
     }, [http, actionType, currentUser])
 
     function getUserToken(user) {
-        const token = getIdToken(user).catch(err => {
+        return getIdToken(user).catch(err => {
             throw new Error(err.message.replace('Firebase: Error ', ''))
         })
-        return token
     }
 
     function logout() {
@@ -100,6 +100,7 @@ export default function AuthProvider({ children }) {
     useEffect(() => {
         const unsubscribe = auth.onAuthStateChanged((user) => {
             setCurrentUser(user)
+            user && getUserToken(user).then(token => setUserToken(token))
             setLoading(false)
         })
         return unsubscribe
@@ -113,7 +114,8 @@ export default function AuthProvider({ children }) {
         resetPassword,
         updateDisplayName,
         updatePasswordWrapper,
-        getUserToken
+        getUserToken,
+        userToken
     }
 
     return (

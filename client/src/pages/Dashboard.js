@@ -11,11 +11,11 @@ import NotificationService, { NOTIF_TASK_CHANGED } from '../services/notificatio
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faSpinner } from '@fortawesome/free-solid-svg-icons'
 import AddTaskModal from '../modals/AddTaskModal'
+import HttpService from '../services/http-service'
 
 export default function Dashboard() {
 
     //  STATES
-
     const [error, setError] = useState('')
     const [message, setMessage] = useState('')
     const [uidToken, setUidToken] = useState()
@@ -25,11 +25,7 @@ export default function Dashboard() {
 
     //  SERVICES
     const ns = useMemo(() => new NotificationService(), [])
-    const ds = useMemo(() => new DataService(), [])
-
-    //  REFS
-    // const taskNameRef = useRef()
-    // const descriptionRef = useRef()  
+    const ds = useMemo(() => new DataService(new HttpService()), [])
 
     //  AUTH CONTEXT
     const { currentUser, getUserToken } = useAuth()
@@ -75,6 +71,14 @@ export default function Dashboard() {
         setTasks(newTasks)
     }
 
+
+    /* You dont really need to get the token here anymore
+    as I already have a hook to get the current user token,
+    but I'll just leave it here because I struggled just to
+    do this. You may also use this as a reviewer on the use
+    of async functions */
+
+    
     useEffect(() => {
         const getUidToken = async () => {
             try {

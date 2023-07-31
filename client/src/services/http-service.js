@@ -29,6 +29,24 @@ class HttpService {
         })
     }
 
+    updateTask = (newTask) => {
+        return this.api.put('http://localhost:4001/task/update', {
+            _id: newTask._id,
+            title: newTask.title,
+            description: newTask.description,
+            startdate: newTask.startDate,
+            dueDate: newTask.dueDate,
+            completed: newTask.completed
+        }).then(response => {
+            console.log("Task Updated Succesfully")
+            return response.data
+        }).catch(err => {
+            console.log("An error occured when updating task")
+            throw err
+        })
+    }
+
+
 
     loginUser = (uid) => {
         return this.api.post('http://localhost:4001/login', {
