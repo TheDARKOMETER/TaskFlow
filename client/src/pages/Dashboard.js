@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useMemo, useState } from 'react'
+import React, { useCallback, useEffect, useMemo, useReducer, useState } from 'react'
 import PageDiv from '../components/PageDiv'
 import { useAuth } from '../contexts/authContext'
 import { Row, Col, Card, Alert } from 'react-bootstrap'
@@ -13,6 +13,23 @@ import { faSpinner } from '@fortawesome/free-solid-svg-icons'
 import AddTaskModal from '../modals/AddTaskModal'
 import HttpService from '../services/http-service'
 
+function dashboardReducer(state, action) {
+    switch (action.type) {
+        case "SET_TASK_STATS":
+            const { tasks } = action.payload
+            let missedTasks = []
+            let completedTasks = []
+            console.log(tasks)
+            tasks.forEach(task => {
+                task.missed && missedTasks.push(task)
+                task.completed && completedTasks.push(task)
+            });
+            return { ...state, missedTasks, completedTasks }
+        default:
+            return state
+    }
+}
+
 export default function Dashboard() {
 
     //  STATES
@@ -23,6 +40,11 @@ export default function Dashboard() {
     const [loading, setLoading] = useState(true)
     const navigate = useNavigate()
 
+    //  REDUCER
+    const [dashboardState, dispatch] = useReducer(dashboardReducer, { missedTasks: 0, completedTasks: 0 })
+    const { missedTasks, completedTasks } = dashboardState
+
+
     //  SERVICES
     const ns = useMemo(() => new NotificationService(), [])
     const ds = useMemo(() => new DataService(new HttpService()), [])
@@ -30,6 +52,9 @@ export default function Dashboard() {
     //  AUTH CONTEXT
     const { currentUser, getUserToken } = useAuth()
 
+
+
+    //  FUNCTIONS
     const loadData = useCallback(async () => {
         try {
             ds.getTasks().then(data => {
@@ -47,7 +72,7 @@ export default function Dashboard() {
     const renderTasks = () => {
         return tasks.map((task) => {
             return (
-                <Col sm='4' key={task._id}>
+                <Col sm='4' className='mt-2 mb-2' key={task._id}>
                     <TaskItem task={task} />
                 </Col>
             )
@@ -78,7 +103,7 @@ export default function Dashboard() {
     do this. You may also use this as a reviewer on the use
     of async functions */
 
-    
+
     useEffect(() => {
         const getUidToken = async () => {
             try {
@@ -104,6 +129,10 @@ export default function Dashboard() {
         }
     }, [uidToken, loadData, ds])
 
+    useEffect(() => {
+        tasks && dispatch({ type: 'SET_TASK_STATS', payload: { tasks } })
+    }, [tasks])
+
     return (
         <>
             {currentUser ? (
@@ -119,6 +148,8 @@ export default function Dashboard() {
                                     {error && <Alert variant='danger'>{error}</Alert>}
                                     <Card.Title>Your Stats</Card.Title>
                                     <Card.Text>You have {tasks.length} task(s) due</Card.Text>
+                                    <Card.Text>Missed Tasks: {missedTasks.length}</Card.Text>
+                                    <Card.Text>Completed Tasks: {completedTasks.length}</Card.Text>
                                     <AddTaskModal addTaskHandler={addTask} />
                                 </Card.Body>
                             </Card>
@@ -130,7 +161,7 @@ export default function Dashboard() {
                             <h1>Your tasks</h1>
                         </Col>
                     </Row>
-                    <Row>
+                    <Row className='d-flex justify-content-center'>
                         {renderTasks()}
                     </Row>
                 </PageDiv>
