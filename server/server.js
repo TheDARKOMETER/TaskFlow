@@ -46,7 +46,6 @@ const checkIfUserExists = (firebaseUid) => {
 startDBServer()
 
 app.get('/tasks/all', authenticateUser, (req, res) => {
-    // TODO: Fix the updation of tasks
     Task.find({ owner: req.user.uid }).then(tasks => {
         console.log(tasks)
         console.log("Sending data to client")
