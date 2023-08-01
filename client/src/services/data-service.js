@@ -25,8 +25,8 @@ class DataService {
             })
     }
 
-    getTasks = () => {
-        return this.http.getTasks()
+    getTasks = (filter) => {
+        return this.http.getTasks(filter)
     }
 
     updateTask = (task) => {

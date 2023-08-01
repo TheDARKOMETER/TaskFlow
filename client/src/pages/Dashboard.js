@@ -15,15 +15,21 @@ import HttpService from '../services/http-service'
 
 function dashboardReducer(state, action) {
     switch (action.type) {
+        case "SET_ALL_TASKS":
+            return { ...state, allTasks: [...action.payload] }
         case "SET_TASK_STATS":
-            const { tasks } = action.payload
+            let initTasks = [...state.allTasks]
             let missedTasks = []
             let completedTasks = []
-            tasks.forEach(task => {
+            let dueTasks = []
+            initTasks.forEach(task => {
                 task.missed && missedTasks.push(task)
                 task.completed && completedTasks.push(task)
+                if (!task.completed && !task.missed) {
+                    dueTasks.push(task)
+                }
             });
-            return { ...state, missedTasks, completedTasks }
+            return { ...state, missedTasks, completedTasks, dueTasks }
         default:
             return state
     }
@@ -31,23 +37,24 @@ function dashboardReducer(state, action) {
 
 export default function Dashboard() {
 
+    //  SERVICES
+    const ns = useMemo(() => new NotificationService(), [])
+    const ds = useMemo(() => new DataService(new HttpService()), [])
+
+
     //  STATES
     const [error, setError] = useState('')
     const [message, setMessage] = useState('')
     const [uidToken, setUidToken] = useState()
     const [tasks, setTasks] = useState([])
     const [loading, setLoading] = useState(true)
-    const [filter, setFilter] = useState()
+    const [filter, setFilter] = useState('all')
     const navigate = useNavigate()
 
     //  REDUCER
-    const [dashboardState, dispatch] = useReducer(dashboardReducer, { missedTasks: 0, completedTasks: 0 })
-    const { missedTasks, completedTasks } = dashboardState
+    const [dashboardState, dispatch] = useReducer(dashboardReducer, { missedTasks: [], completedTasks: [], allTasks: [], dueTasks: [] })
+    const { missedTasks, completedTasks, allTasks, dueTasks } = dashboardState
 
-
-    //  SERVICES
-    const ns = useMemo(() => new NotificationService(), [])
-    const ds = useMemo(() => new DataService(new HttpService()), [])
 
     //  AUTH CONTEXT
     const { currentUser, getUserToken } = useAuth()
@@ -57,7 +64,7 @@ export default function Dashboard() {
     //  FUNCTIONS
     const loadData = useCallback(async () => {
         try {
-            ds.getTasks().then(data => {
+            ds.getTasks(filter).then(data => {
                 setTasks(data)
             }).catch((err) => {
                 (err.code === "ERR_NETWORK") ? setError("Connection to server lost. Try again later") : navigate('/auth/unauthorized')
@@ -67,16 +74,18 @@ export default function Dashboard() {
         } finally {
             setLoading(false)
         }
-    }, [ds, navigate])
+    }, [ds, navigate, filter])
 
     const renderTasks = () => {
-        return tasks.map((task) => {
-            return (
-                <Col sm='4' className='mt-2 mb-2' key={task._id}>
-                    <TaskItem task={task} />
-                </Col>
-            )
-        });
+        if (!loading) {
+            return tasks.map((task) => {
+                return (
+                    <Col sm='4' className='mt-2 mb-2' key={task._id}>
+                        <TaskItem task={task} />
+                    </Col>
+                )
+            });
+        }
     };
 
 
@@ -93,7 +102,7 @@ export default function Dashboard() {
     }
 
     const onTaskChanged = (newTasks) => {
-        setTasks(newTasks)
+        dispatch({ type: 'SET_ALL_TASKS', payload: newTasks })
     }
 
     const btnLinkStyle = {
@@ -131,13 +140,15 @@ export default function Dashboard() {
     useEffect(() => {
         if (uidToken) {
             ds.setHttpAuth(uidToken)
+            ds.getTasks('all').then(result => dispatch({ type: 'SET_ALL_TASKS', payload: result }))
             loadData()
         }
     }, [uidToken, loadData, ds])
 
     useEffect(() => {
-        tasks && dispatch({ type: 'SET_TASK_STATS', payload: { tasks } })
-    }, [tasks])
+        allTasks && dispatch({ type: 'SET_TASK_STATS' })
+    }, [allTasks])
+
 
     return (
         <>
@@ -153,7 +164,7 @@ export default function Dashboard() {
                                     {message && <Alert variant='success'>{message}</Alert>}
                                     {error && <Alert variant='danger'>{error}</Alert>}
                                     <Card.Title>Your Stats</Card.Title>
-                                    <Card.Text>You have {tasks.length} task(s) due</Card.Text>
+                                    <Card.Text>You have {dueTasks.length} task(s) due</Card.Text>
                                     <Card.Text>Missed Tasks: {missedTasks.length}</Card.Text>
                                     <Card.Text>Completed Tasks: {completedTasks.length}</Card.Text>
                                     <AddTaskModal addTaskHandler={addTask} />
@@ -166,9 +177,10 @@ export default function Dashboard() {
                         <Col className='text-center'>
                             <h1>Your tasks</h1>
                             <div>
-                                <Button style={btnLinkStyle} variant='link' onClick={() => setFilter('all')}>All Tasks</Button>
-                                <Button style={btnLinkStyle} variant='link' onClick={() => setFilter('due')}>Due Tasks</Button>
-                                <Button style={btnLinkStyle} variant='link' onClick={() => setFilter('missed')}>Missed Tasks</Button>
+                                <Button style={{ ...btnLinkStyle, textDecoration: filter === 'all' ? 'underline' : 'none' }} variant='link' onClick={() => setFilter('all')}>All Tasks</Button>
+                                <Button style={{ ...btnLinkStyle, textDecoration: filter === 'due' ? 'underline' : 'none' }} variant='link' onClick={() => setFilter('due')}>Due Tasks</Button>
+                                <Button style={{ ...btnLinkStyle, textDecoration: filter === 'missed' ? 'underline' : 'none' }} variant='link' onClick={() => setFilter('missed')}>Missed Tasks</Button>
+                                <Button style={{ ...btnLinkStyle, textDecoration: filter === 'completed' ? 'underline' : 'none' }} variant='link' onClick={() => setFilter('completed')}>Completed Tasks</Button>
                             </div>
                         </Col>
                     </Row>

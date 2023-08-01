@@ -2,9 +2,10 @@ import React from 'react'
 import { Card, Button } from 'react-bootstrap'
 import DataService from '../services/data-service'
 import { useAuth } from '../contexts/authContext'
+import HttpService from '../services/http-service'
 
 export default function TaskItem(props) {
-    const ds = new DataService()
+    const ds = new DataService(new HttpService())
     const startDate = new Date(props.task.startDate)
     const dueDate = new Date(props.task.dueDate)
     const { userToken } = useAuth()
@@ -22,7 +23,7 @@ export default function TaskItem(props) {
                 justifyContent: 'space-between'
             }}>
                 <div style={{
-                    color: props.task.completed ? 'green' : props.task.missed ? 'red' : 'black'
+                    color: props.task.completed ? 'green' : props.task.missed ? 'red' : 'goldenrod'
                 }}>{props.task.completed
                     ? "(Completed)"
                     : (props.task.missed
