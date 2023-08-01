@@ -96,6 +96,12 @@ export default function Dashboard() {
         setTasks(newTasks)
     }
 
+    const btnLinkStyle = {
+        fontSize: '1em',
+        color: 'black',
+        textDecoration: 'none'
+    }
+
 
     /* You dont really need to get the token here anymore
     as I already have a hook to get the current user token,
@@ -160,9 +166,9 @@ export default function Dashboard() {
                         <Col className='text-center'>
                             <h1>Your tasks</h1>
                             <div>
-                            <Button style={{ fontSize: '1em', color: 'black', textDecoration:'none' }} variant='link'>All Tasks</Button>
-                                <Button style={{ fontSize: '1em', color: 'black' }} variant='link'>Due Tasks</Button>
-                                <Button style={{ fontSize: '1em', color: 'black' }} variant='link'>Missed Tasks</Button>
+                                <Button style={btnLinkStyle} variant='link' onClick={() => setFilter('all')}>All Tasks</Button>
+                                <Button style={btnLinkStyle} variant='link' onClick={() => setFilter('due')}>Due Tasks</Button>
+                                <Button style={btnLinkStyle} variant='link' onClick={() => setFilter('missed')}>Missed Tasks</Button>
                             </div>
                         </Col>
                     </Row>
