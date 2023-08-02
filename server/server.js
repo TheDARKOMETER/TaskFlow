@@ -45,9 +45,22 @@ const checkIfUserExists = (firebaseUid) => {
 
 startDBServer()
 
-app.get('/tasks/all', authenticateUser, (req, res) => {
-    Task.find({ owner: req.user.uid }).then(tasks => {
-        console.log(tasks)
+app.get('/tasks/', authenticateUser, (req, res) => {
+
+    const { filter } = req.query
+    console.log(filter)
+
+    const findQuery = { owner: req.user.uid }
+    if (filter === 'due') {
+        findQuery.completed = false
+        findQuery.missed = false
+    } else if (filter === 'missed') {
+        findQuery.missed = true
+    } else if (filter === 'completed') {
+        findQuery.completed = true
+    }
+
+    Task.find(findQuery).then(tasks => {
         console.log("Sending data to client")
         if (tasks.length > 0) {
             const updateTasks = tasks.map((task) => {
@@ -57,14 +70,12 @@ app.get('/tasks/all', authenticateUser, (req, res) => {
                 console.log(new Date(task.dueDate).toLocaleDateString())
                 return task.save({ validateBeforeSave: false })
             })
-            return Promise.all(updateTasks)
+            return Promise.all(updateTasks).then(() => {
+                res.status(200).send(tasks)
+            })
         } else {
-            return tasks
+            res.status(200).send("No tasks found for the user")
         }
-    }).then((updatedTasks) => {
-        console.log(new Date(Date.now()).toLocaleDateString())
-        console.log("Task data has been updated succesfully")
-        res.status(200).send(updatedTasks)
     }).catch((err) => {
         console.log(err)
         res.status(500).send({ "error": "an error has occured" })
