@@ -193,8 +193,8 @@ export default function Dashboard() {
                         </Col>
                     </Row>
                     <Row className='d-flex justify-content-center'>
-                        {/* {renderTasks()} */}
-                        {(tasks.length > 0) && <PaginationComponent items={renderTasks()} />}
+                        {renderTasks()}
+                        {/* {(tasks.length > 0) && <PaginationComponent items={renderTasks()} />} */}
                         {/* {console.log(renderTasks())} */}
                     </Row>
                 </PageDiv>
