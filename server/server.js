@@ -62,20 +62,16 @@ app.get('/tasks/', authenticateUser, (req, res) => {
 
     Task.find(findQuery).then(tasks => {
         console.log("Sending data to client")
-        if (tasks.length > 0) {
-            const updateTasks = tasks.map((task) => {
-                if (new Date(task.dueDate).toLocaleDateString() < new Date(Date.now()).toLocaleDateString()) {
-                    task.missed = true
-                }
-                // console.log(new Date(task.dueDate).toLocaleDateString())
-                return task.save({ validateBeforeSave: false })
-            })
-            return Promise.all(updateTasks).then(() => {
-                res.status(200).send(tasks)
-            })
-        } else {
-            res.status(200).send("No tasks found for the user")
-        }
+        const updateTasks = tasks.map((task) => {
+            if (new Date(task.dueDate).toLocaleDateString() < new Date(Date.now()).toLocaleDateString()) {
+                task.missed = true
+            }
+            // console.log(new Date(task.dueDate).toLocaleDateString())
+            return task.save({ validateBeforeSave: false })
+        })
+        return Promise.all(updateTasks).then(() => {
+            res.status(200).send(tasks)
+        })
     }).catch((err) => {
         console.log(err)
         res.status(500).send({ "error": "an error has occured" })

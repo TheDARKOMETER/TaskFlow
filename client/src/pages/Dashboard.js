@@ -12,6 +12,8 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faSpinner } from '@fortawesome/free-solid-svg-icons'
 import AddTaskModal from '../modals/AddTaskModal'
 import HttpService from '../services/http-service'
+import PaginationComponent from '../components/PaginationComponent'
+
 
 function dashboardReducer(state, action) {
     switch (action.type) {
@@ -75,7 +77,7 @@ export default function Dashboard() {
     }, [ds, navigate, filter])
 
     const renderTasks = () => {
-        if (!loading) {
+        if (!loading && tasks) {
             return tasks.map((task) => {
                 return (
                     <Col sm='4' className='mt-2 mb-2' key={task._id}>
@@ -137,23 +139,23 @@ export default function Dashboard() {
 
 
     useEffect(() => {
+        // Sets all tasks
         if (uidToken) {
             ds.setHttpAuth(uidToken)
-            ds.getTasks('all').then(result => dispatch({ type: 'SET_ALL_TASKS', payload: result }))
+            ds.getTasks('all').then(result => {
+                const data = (result.length > 0) ? result : []
+                dispatch({ type: 'SET_ALL_TASKS', payload: data })
+            })
             loadData()
         }
     }, [uidToken, loadData, ds])
 
     useEffect(() => {
+        // Sets task when allTasks changes, thus updating the state and re-rendering the component
         if (uidToken) {
-            ds.getTasks(filter).then(data => {
-                const reqData = Array.isArray(data) ? data : []
-                dispatch({ type: "SET_CLIENT_TASK", payload: reqData })
-            }).catch((err) => {
-                (err.code === "ERR_NETWORK") ? setError("Connection to server lost. Try again later") : navigate('/auth/unauthorized')
-            })
+            loadData()
         }
-    }, [allTasks, ds, filter, navigate])
+    }, [uidToken, loadData, allTasks])
 
 
     return (
@@ -191,7 +193,9 @@ export default function Dashboard() {
                         </Col>
                     </Row>
                     <Row className='d-flex justify-content-center'>
-                        {renderTasks()}
+                        {/* {renderTasks()} */}
+                        {(tasks.length > 0) && <PaginationComponent items={renderTasks()} />}
+                        {/* {console.log(renderTasks())} */}
                     </Row>
                 </PageDiv>
             ) : (<RedirectHome />)}

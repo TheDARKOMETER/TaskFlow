@@ -15,7 +15,6 @@ class HttpService {
     }
 
     addTask = (title, description, startDate, dueDate, owner) => {
-        alert(this.authToken)
         return this.api.post('http://localhost:4001/task/add', {
             title,
             description,
@@ -31,7 +30,6 @@ class HttpService {
     }
 
     updateTask = (newTask) => {
-        alert(this.authToken)
         return this.api.put('http://localhost:4001/task/update', {
             _id: newTask._id,
             title: newTask.title,
@@ -49,7 +47,6 @@ class HttpService {
     }
 
     deleteTask = (taskId) => {
-        alert(this.authToken)
         return this.api.delete(`http://localhost:4001/task/delete/${taskId}`).then(response => {
             return response.data
         }).catch(err => {
@@ -60,7 +57,6 @@ class HttpService {
 
 
     loginUser = (uid) => {
-        alert(this.authToken)
         return this.api.post('http://localhost:4001/login', {
             firebaseUid: uid
         }).then(response => {
@@ -73,7 +69,6 @@ class HttpService {
 
 
     signUpUser = (uid) => {
-        alert(this.authToken)
         return this.api.post('http://localhost:4001/signup', {
             firebaseUid: uid
         }).then(response => {
