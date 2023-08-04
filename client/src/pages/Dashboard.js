@@ -31,7 +31,8 @@ function dashboardReducer(state, action) {
             });
             return { ...state, allTasks: [...action.payload], missedTasks, completedTasks, dueTasks }
         case "SET_CLIENT_TASK":
-            return { ...state, tasks: [...action.payload] }
+            const taskItemComponents = action.payload.map(task => <TaskItem task={task} key={task._id} />);
+            return { ...state, tasks: taskItemComponents }
         default:
             return state
     }
@@ -64,8 +65,7 @@ export default function Dashboard() {
     const loadData = useCallback(async () => {
         try {
             ds.getTasks(filter).then(data => {
-                const reqData = Array.isArray(data) ? data : []
-                dispatch({ type: "SET_CLIENT_TASK", payload: reqData })
+                dispatch({ type: "SET_CLIENT_TASK", payload: data })
             }).catch((err) => {
                 (err.code === "ERR_NETWORK") ? setError("Connection to server lost. Try again later") : navigate('/auth/unauthorized')
             })
@@ -75,18 +75,6 @@ export default function Dashboard() {
             setLoading(false)
         }
     }, [ds, navigate, filter])
-
-    const renderTasks = () => {
-        if (!loading && tasks) {
-            return tasks.map((task) => {
-                return (
-                    <Col sm='4' className='mt-2 mb-2' key={task._id}>
-                        <TaskItem task={task} />
-                    </Col>
-                )
-            });
-        }
-    };
 
 
     const addTask = (name, description, start, due) => {
@@ -193,9 +181,7 @@ export default function Dashboard() {
                         </Col>
                     </Row>
                     <Row className='d-flex justify-content-center'>
-                        {renderTasks()}
-                        {/* {(tasks.length > 0) && <PaginationComponent items={renderTasks()} />} */}
-                        {/* {console.log(renderTasks())} */}
+                        {(tasks.length > 0) && <PaginationComponent items={tasks} />}
                     </Row>
                 </PageDiv>
             ) : (<RedirectHome />)}

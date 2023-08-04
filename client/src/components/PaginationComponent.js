@@ -1,5 +1,5 @@
 import React, { useEffect, useReducer, useRef, useState } from 'react'
-
+import { Col } from 'react-bootstrap'
 function paginationReducer(state, action) {
     switch (action.type) {
         case "SET_ITEMS_PER_PAGE":
@@ -31,15 +31,13 @@ function paginationReducer(state, action) {
 }
 
 export default function PaginationComponent(props) {
-    const [items] = useState(props.items)
-    const [paginationState, dispatch] = useReducer(paginationReducer, { itemsPerPage: 4 })
+    const [paginationState, dispatch] = useReducer(paginationReducer, { itemsPerPage: 6 })
     const [currentPage, setCurrentPage] = useState(0)
     const quantityRef = useRef()
     const { itemsPerPage, pageNumbers, pages } = paginationState
 
     const pageLinks = () => {
         let pageLinks = []
-        console.log(pageNumbers)
         for (let x = 0; x < pageNumbers; x++) {
             pageLinks.push(<a key={x} onClick={() => setCurrentPage(x)} style={
                 {
@@ -67,8 +65,8 @@ export default function PaginationComponent(props) {
     }
 
     useEffect(() => {
-        dispatch({ type: 'UPDATE_PAGINATION', payload: { items, itemsPerPage } })
-    }, [itemsPerPage, items])
+        dispatch({ type: 'UPDATE_PAGINATION', payload: { items: props.items, itemsPerPage } })
+    }, [itemsPerPage, props.items])
 
 
     useEffect(() => {
@@ -79,9 +77,9 @@ export default function PaginationComponent(props) {
         try {
             return page.items.map((item, index) => {
                 return (
-                    <>
+                    <Col sm='4' className='mt-2 mb-2' key={index}>
                         {item}
-                    </>
+                    </Col>
                 )
             })
         } catch {
@@ -96,7 +94,7 @@ export default function PaginationComponent(props) {
                 {pageLinks()}
             </div>
             <label style={{ marginLeft: '16px', marginRight: '16px' }} htmlFor='quantity'>Items per page</label>
-            <input type='number' min='1' max='10' defaultValue='4' ref={quantityRef} onChange={() => {
+            <input type='number' min='1' max='10' defaultValue={itemsPerPage} ref={quantityRef} onChange={() => {
                 dispatch({ type: "SET_ITEMS_PER_PAGE", payload: quantityRef.current.value, currentPage: currentPage })
             }
             } />
