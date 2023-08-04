@@ -31,7 +31,7 @@ function dashboardReducer(state, action) {
             });
             return { ...state, allTasks: [...action.payload], missedTasks, completedTasks, dueTasks }
         case "SET_CLIENT_TASK":
-            const taskItemComponents = action.payload.map(task => <TaskItem task={task} key={task._id} />);
+            const taskItemComponents = action.payload.map(task => <TaskItem ns={action.ns} errorHandler={action.errorHandler} ds={action.ds} task={task} key={task._id} />);
             return { ...state, tasks: taskItemComponents }
         default:
             return state
@@ -65,7 +65,7 @@ export default function Dashboard() {
     const loadData = useCallback(async () => {
         try {
             ds.getTasks(filter).then(data => {
-                dispatch({ type: "SET_CLIENT_TASK", payload: data })
+                dispatch({ type: "SET_CLIENT_TASK", payload: data, ds, errorHandler: setError })
             }).catch((err) => {
                 (err.code === "ERR_NETWORK") ? setError("Connection to server lost. Try again later") : navigate('/auth/unauthorized')
             })

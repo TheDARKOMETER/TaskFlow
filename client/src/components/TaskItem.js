@@ -1,26 +1,28 @@
 import React, { useEffect, useMemo } from 'react'
 import { Card, Button } from 'react-bootstrap'
-import DataService from '../services/data-service'
 import { useAuth } from '../contexts/authContext'
-import HttpService from '../services/http-service'
 
 export default function TaskItem(props) {
 
-    const startDate = new Date(props.task.startDate)
-    const dueDate = new Date(props.task.dueDate)
+    const startDate = useMemo(() => new Date(props.task.startDate), [props.task.startDate])
+    const dueDate = useMemo(() => new Date(props.task.dueDate), [props.task.dueDate])
     const { userToken } = useAuth()
-    const ds = useMemo(() => new DataService(new HttpService()), [])
+    const ds = props.ds
 
     useEffect(() => {
         userToken && ds.setHttpAuth(userToken)
     }, [userToken, ds])
 
     const markComplete = () => {
-        ds.updateTask({ ...props.task, completed: true })
+        ds.updateTask({ ...props.task, completed: true }).catch(() => {
+            props.errorHandler("An error occured, try refreshing")
+        })
     }
 
     const deleteTask = () => {
-        ds.deleteTask(props.task._id)
+        ds.deleteTask(props.task._id).catch(() => {
+            props.errorHandler("An error occured, try refreshing")
+        })
     }
 
     return (
