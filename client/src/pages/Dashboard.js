@@ -16,9 +16,7 @@ import HttpService from '../services/http-service'
 function dashboardReducer(state, action) {
     switch (action.type) {
         case "SET_ALL_TASKS":
-            return { ...state, allTasks: [...action.payload] }
-        case "SET_TASK_STATS":
-            let initTasks = [...state.allTasks]
+            let initTasks = [...action.payload]
             let missedTasks = []
             let completedTasks = []
             let dueTasks = []
@@ -29,7 +27,9 @@ function dashboardReducer(state, action) {
                     dueTasks.push(task)
                 }
             });
-            return { ...state, missedTasks, completedTasks, dueTasks }
+            return { ...state, allTasks: [...action.payload], missedTasks, completedTasks, dueTasks }
+        case "SET_CLIENT_TASK":
+            return { ...state, tasks: [...action.payload] }
         default:
             return state
     }
@@ -46,26 +46,24 @@ export default function Dashboard() {
     const [error, setError] = useState('')
     const [message, setMessage] = useState('')
     const [uidToken, setUidToken] = useState()
-    const [tasks, setTasks] = useState([])
     const [loading, setLoading] = useState(true)
     const [filter, setFilter] = useState('all')
     const navigate = useNavigate()
 
     //  REDUCER
-    const [dashboardState, dispatch] = useReducer(dashboardReducer, { missedTasks: [], completedTasks: [], allTasks: [], dueTasks: [] })
-    const { missedTasks, completedTasks, allTasks, dueTasks } = dashboardState
+    const [dashboardState, dispatch] = useReducer(dashboardReducer, { missedTasks: [], completedTasks: [], allTasks: [], dueTasks: [], tasks: [] })
+    const { missedTasks, completedTasks, allTasks, dueTasks, tasks } = dashboardState
 
 
     //  AUTH CONTEXT
     const { currentUser, getUserToken } = useAuth()
 
-
-
     //  FUNCTIONS
     const loadData = useCallback(async () => {
         try {
             ds.getTasks(filter).then(data => {
-                setTasks(data)
+                const reqData = Array.isArray(data) ? data : []
+                dispatch({ type: "SET_CLIENT_TASK", payload: reqData })
             }).catch((err) => {
                 (err.code === "ERR_NETWORK") ? setError("Connection to server lost. Try again later") : navigate('/auth/unauthorized')
             })
@@ -92,9 +90,10 @@ export default function Dashboard() {
     const addTask = (name, description, start, due) => {
         setError('')
         setMessage('')
+        setLoading(true)
         ds.addTask(name, description, start, due)
-            .then(response => {
-                console.log(response)
+            .then(() => {
+                setLoading(false)
                 setMessage(`Task "${name}" has been added successfully.`)
             }).catch((err) => {
                 setError(`An error has occcured ${err}`)
@@ -146,8 +145,15 @@ export default function Dashboard() {
     }, [uidToken, loadData, ds])
 
     useEffect(() => {
-        allTasks && dispatch({ type: 'SET_TASK_STATS' })
-    }, [allTasks])
+        if (uidToken) {
+            ds.getTasks(filter).then(data => {
+                const reqData = Array.isArray(data) ? data : []
+                dispatch({ type: "SET_CLIENT_TASK", payload: reqData })
+            }).catch((err) => {
+                (err.code === "ERR_NETWORK") ? setError("Connection to server lost. Try again later") : navigate('/auth/unauthorized')
+            })
+        }
+    }, [allTasks, ds, filter, navigate])
 
 
     return (

@@ -15,7 +15,7 @@ class DataService {
     addTask = (title, description, startDate, dueDate) => {
         return this.http.addTask(title, description, startDate, dueDate)
             .then(() => {
-                return this.getTasks()
+                return this.getTasks('all')
             })
             .then(tasks => {
                 this.ns.postNotification(NOTIF_TASK_CHANGED, tasks)
@@ -40,6 +40,16 @@ class DataService {
             .catch(err => {
                 throw err
             })
+    }
+
+    deleteTask = (taskId) => {
+        return this.http.deleteTask(taskId).then(() => {
+            return this.getTasks()
+        }).then(tasks => {
+            this.ns.postNotification(NOTIF_TASK_CHANGED, tasks)
+        }).catch(err => {
+            throw err
+        })
     }
 
     setHttpAuth = (authToken) => {

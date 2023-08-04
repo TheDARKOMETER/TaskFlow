@@ -48,7 +48,7 @@ startDBServer()
 app.get('/tasks/', authenticateUser, (req, res) => {
 
     const { filter } = req.query
-    console.log(filter)
+    // console.log(filter)
 
     const findQuery = { owner: req.user.uid }
     if (filter === 'due') {
@@ -67,7 +67,7 @@ app.get('/tasks/', authenticateUser, (req, res) => {
                 if (new Date(task.dueDate).toLocaleDateString() < new Date(Date.now()).toLocaleDateString()) {
                     task.missed = true
                 }
-                console.log(new Date(task.dueDate).toLocaleDateString())
+                // console.log(new Date(task.dueDate).toLocaleDateString())
                 return task.save({ validateBeforeSave: false })
             })
             return Promise.all(updateTasks).then(() => {
@@ -154,6 +154,17 @@ app.put('/task/update', authenticateUser, (req, res) => {
         res.status(500).send({ error: err })
     })
 })
+
+app.delete('/task/delete/:id', authenticateUser, (req, res) => {
+    Task.deleteOne({ _id: req.params.id }).then(result => {
+        console.log("Task deleted")
+        res.status(200).send(result)
+    }).catch((err) => {
+        console.log(err)
+        res.status(500).send({ err: "An error occured" })
+    })
+})
+
 
 app.listen(PORT, () => {
     console.log(`Running on port ${PORT}`)
