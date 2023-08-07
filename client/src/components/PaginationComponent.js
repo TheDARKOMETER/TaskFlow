@@ -60,12 +60,10 @@ export default function PaginationComponent(props) {
     }
 
     const onTaskChanged = useCallback(() => {
-        console.log(filter)
         ds.getTasks(filter, currentPage + 1, itemsPerPage).then(({ tasks, totalPages }) => {
             if (currentPage + 1 > totalPages) {
                 setCurrentPage(pageNumbers - 1)
             }
-            console.log(filter)
             dispatch({ type: 'UPDATE_PAGINATION', ns, ds, payload: { items: tasks, totalPages, errorHandler: props.errorHandler, filter } })
         }).catch((err) => {
             console.log(err)

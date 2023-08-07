@@ -29,7 +29,6 @@ class DataService {
     }
 
     getTasks = (filter, page, itemsPerPage) => {
-        console.log(filter + "(ds)")
         return this.http.getTasks(filter, page, itemsPerPage)
     }
 
