@@ -79,19 +79,29 @@ class HttpService {
     }
 
 
-    getTasks = (filter) => {
+    getTasks = (filter, page, itemsPerPage) => {
         return this.api.get('http://localhost:4001/tasks/', {
             params: {
-                filter: filter
+                filter,
+                page,
+                itemsPerPage
             }
         }
         ).then(response => {
-            return response.data
+            return {
+                tasks: response.data.tasks,
+                totalPages: response.data.totalPages
+            }
         }).catch(err => {
             throw err
         })
     }
 
+    fetchStats = () => {
+        return this.api.get('http://localhost:4001/tasks/stats').then(response => {
+            return response.data
+        })
+    }
 
 }
 

@@ -14,7 +14,8 @@ export default function TaskItem(props) {
     }, [userToken, ds])
 
     const markComplete = () => {
-        ds.updateTask({ ...props.task, completed: true }).catch(() => {
+        ds.updateTask({ ...props.task, completed: true }).catch((err) => {
+            console.log(err)
             props.errorHandler("An error occured, try refreshing")
         })
     }

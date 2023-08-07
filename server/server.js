@@ -46,10 +46,9 @@ const checkIfUserExists = (firebaseUid) => {
 startDBServer()
 
 app.get('/tasks/', authenticateUser, (req, res) => {
-
-    const { filter } = req.query
+    const { filter, page, itemsPerPage } = req.query
+    let promises = []
     // console.log(filter)
-
     const findQuery = { owner: req.user.uid }
     if (filter === 'due') {
         findQuery.completed = false
@@ -59,23 +58,64 @@ app.get('/tasks/', authenticateUser, (req, res) => {
     } else if (filter === 'completed') {
         findQuery.completed = true
     }
-
-    Task.find(findQuery).then(tasks => {
-        console.log("Sending data to client")
-        const updateTasks = tasks.map((task) => {
-            if (new Date(task.dueDate).toLocaleDateString() < new Date(Date.now()).toLocaleDateString()) {
-                task.missed = true
-            }
-            // console.log(new Date(task.dueDate).toLocaleDateString())
-            return task.save({ validateBeforeSave: false })
-        })
-        return Promise.all(updateTasks).then(() => {
-            res.status(200).send(tasks)
-        })
+    console.log(page)
+    console.log(itemsPerPage)
+    Task.countDocuments(findQuery).then((totalItems) => {
+        const totalPages = Math.ceil(totalItems / itemsPerPage)
+        if (totalItems > 0) {
+            Task.find(findQuery)
+                .skip((page - 1) * itemsPerPage)
+                .limit(itemsPerPage)
+                .then(tasks => {
+                    const updateTasks = tasks.map((task) => {
+                        if (new Date(task.dueDate).toLocaleDateString() < new Date(Date.now()).toLocaleDateString()) {
+                            task.missed = true
+                        }
+                        // console.log(new Date(task.dueDate).toLocaleDateString())
+                        return task.save({ validateBeforeSave: false })
+                    })
+                    return Promise.all(updateTasks).then(() => {
+                        console.log("Sending data to client")
+                        res.status(200).json({
+                            tasks,
+                            totalPages,
+                            totalItems
+                        })
+                    })
+                }).catch((err) => {
+                    console.log(err)
+                    res.status(500).send({ "error": "an error has occured" })
+                })
+        } else {
+            res.status(200).json({
+                tasks: [],
+                totalPages: 1,
+                totalItems: 0
+            })
+        }
     }).catch((err) => {
         console.log(err)
-        res.status(500).send({ "error": "an error has occured" })
+        res.status(500).send({ error: "an error has occured" })
     })
+})
+
+app.get('/tasks/stats', authenticateUser, (req, res) => {
+    let dueCount = Task.countDocuments({ owner: req.user.uid, completed: false, missed: false })
+    let completedCount = Task.countDocuments({ owner: req.user.uid, completed: true })
+    let missedCount = Task.countDocuments({ owner: req.user.uid, missed: true })
+    let allCount = Task.countDocuments()
+    Promise.all([dueCount, completedCount, missedCount, allCount])
+        .then(([dueCount, completedCount, missedCount, allCount]) => {
+            res.status(200).json({
+                dueCount,
+                completedCount,
+                missedCount,
+                allCount
+            })
+        }).catch((err) => {
+            console.log(err)
+            res.sendStatus(500)
+        })
 })
 
 

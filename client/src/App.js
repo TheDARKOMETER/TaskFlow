@@ -11,6 +11,7 @@ import ForgotPassword from './components/ForgotPassword';
 import UpdateUserInfo from './components/UpdateUserInfo';
 import Dashboard from './pages/Dashboard';
 import Unauthorized from './pages/Unauthorized';
+import PaginatorProvider from './contexts/PaginatorContext';
 
 function App() {
   return (
@@ -21,7 +22,11 @@ function App() {
             <Route exact path='/' element={<MainLayout />}>
               <Route index element={<Home />} />
               <Route path='/about' element={<About />} />
-              <Route path='/dashboard' element={<Dashboard />} />
+              <Route path='/dashboard' element={
+                <PaginatorProvider>
+                  <Dashboard />
+                </PaginatorProvider>
+              } />
             </Route>
             <Route exact path='/auth' element={<AuthLayout />}>
               <Route index element={<RedirectHome />} />

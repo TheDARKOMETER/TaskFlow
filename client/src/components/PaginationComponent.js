@@ -1,40 +1,38 @@
-import React, { useEffect, useReducer, useRef, useState } from 'react'
-import { Col } from 'react-bootstrap'
+import React, { useEffect, useMemo, useReducer, useRef, useState } from 'react'
+import { NOTIF_TASK_CHANGED } from '../services/notification-service';
+import TaskItem from './TaskItem'
+import { Col, Row, Button } from 'react-bootstrap'
+import { usePage } from '../contexts/PaginatorContext'
 function paginationReducer(state, action) {
     switch (action.type) {
-        case "SET_ITEMS_PER_PAGE":
-            return { ...state, itemsPerPage: action.payload }
         case "UPDATE_PAGINATION":
-            const { itemsPerPage, items } = action.payload
-            const pageNumbers = Math.ceil(items.length / itemsPerPage)
-
-            let pages = []
-            let initialItems = [...items]
-            for (let x = 0; x < pageNumbers; x++) {
-                let items = []
-                for (let y = 0; y < itemsPerPage; y++) {
-                    if (initialItems.length > 0) {
-                        items.push(initialItems.shift())
-                    } else {
-                        break
-                    }
-                }
-                let pageObj = {
-                    items: items
-                }
-                pages.push(pageObj)
-            }
-            return { ...state, pageNumbers, pages }
+            const { items, totalPages, errorHandler } = action.payload
+            const pageNumbers = totalPages
+            let taskItemComponents
+            taskItemComponents = items.map(task => <TaskItem errorHandler={errorHandler} ns={action.ns} ds={action.ds} task={task} key={task._id} />);
+            return { ...state, pageNumbers, pageNumbers, taskItemComponents }
         default:
             return state
     }
 }
 
 export default function PaginationComponent(props) {
+
+    const { filter, setFilter, currentPage, setCurrentPage, itemsPerPage, setItemsPerPage } = usePage()
+
     const [paginationState, dispatch] = useReducer(paginationReducer, { itemsPerPage: 6 })
-    const [currentPage, setCurrentPage] = useState(0)
+    // const [currentPage, setCurrentPage] = useState(0)
+    // const [filter, setFilter] = useState('all')
     const quantityRef = useRef()
-    const { itemsPerPage, pageNumbers, pages } = paginationState
+    const ds = useMemo(() => props.ds, [props.ds])
+    const ns = useMemo(() => props.ns, [props.ns])
+    const { pageNumbers, taskItemComponents } = paginationState
+
+    const btnLinkStyle = {
+        fontSize: '1em',
+        color: 'black',
+        textDecoration: 'none'
+    }
 
     const pageLinks = () => {
         let pageLinks = []
@@ -65,23 +63,42 @@ export default function PaginationComponent(props) {
     }
 
     useEffect(() => {
-        dispatch({ type: 'UPDATE_PAGINATION', payload: { items: props.items, itemsPerPage } })
-    }, [itemsPerPage, props.items])
-
+        onTaskChanged()
+    }, [itemsPerPage, filter, currentPage])
 
     useEffect(() => {
-        console.log(pages)
-    }, [pages])
+        ns.addObserver(NOTIF_TASK_CHANGED, onTaskChanged)
+    }, [])
 
-    const renderList = (page) => {
+    const onTaskChanged = () => {
+        ds.getTasks(filter, currentPage + 1, itemsPerPage).then(({ tasks, totalPages }) => {
+            if (currentPage + 1 > totalPages) {
+                setCurrentPage(current => current - 1)
+            }
+            dispatch({ type: 'UPDATE_PAGINATION', ns, ds, payload: { items: tasks, totalPages, errorHandler: props.errorHandler } })
+        }).catch((err) => {
+            console.log(err)
+            props.errorHandler(err)
+        })
+    }
+
+    const renderList = () => {
         try {
-            return page.items.map((item, index) => {
+            if (taskItemComponents.length > 0) {
+                return taskItemComponents.map((item, index) => {
+                    return (
+                        <Col sm='4' className='mt-2 mb-2' key={index}>
+                            {item}
+                        </Col>
+                    )
+                })
+            } else {
                 return (
-                    <Col sm='4' className='mt-2 mb-2' key={index}>
-                        {item}
-                    </Col>
+                    <h1 className='text-center'>
+                        (No tasks)
+                    </h1>
                 )
-            })
+            }
         } catch {
             setCurrentPage(currentPage - 1)
         }
@@ -89,13 +106,24 @@ export default function PaginationComponent(props) {
 
     return (
         <>
-            {pages && renderList(pages[currentPage])}
+            <Row className='pb-5'>
+                <Col className='text-center'>
+                    <h1>Your tasks</h1>
+                    <div>
+                        <Button style={{ ...btnLinkStyle, textDecoration: filter === 'all' ? 'underline' : 'none' }} variant='link' onClick={() => setFilter('all')}>All Tasks</Button>
+                        <Button style={{ ...btnLinkStyle, textDecoration: filter === 'due' ? 'underline' : 'none' }} variant='link' onClick={() => setFilter('due')}>Due Tasks</Button>
+                        <Button style={{ ...btnLinkStyle, textDecoration: filter === 'missed' ? 'underline' : 'none' }} variant='link' onClick={() => setFilter('missed')}>Missed Tasks</Button>
+                        <Button style={{ ...btnLinkStyle, textDecoration: filter === 'completed' ? 'underline' : 'none' }} variant='link' onClick={() => setFilter('completed')}>Completed Tasks</Button>
+                    </div>
+                </Col>
+            </Row>
+            {taskItemComponents && renderList()}
             <div>
                 {pageLinks()}
             </div>
             <label style={{ marginLeft: '16px', marginRight: '16px' }} htmlFor='quantity'>Items per page</label>
             <input type='number' min='1' max='10' defaultValue={itemsPerPage} ref={quantityRef} onChange={() => {
-                dispatch({ type: "SET_ITEMS_PER_PAGE", payload: quantityRef.current.value, currentPage: currentPage })
+                setItemsPerPage(quantityRef.current.value)
             }
             } />
         </>
