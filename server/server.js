@@ -83,7 +83,7 @@ app.get('/tasks/', authenticateUser, (req, res) => {
                         })
                     })
                 }).catch((err) => {
-                    console.log(err)
+                    console.log(err + ` currPage ${page} & iPerPage ${itemsPerPage}`)
                     res.status(500).send({ "error": "an error has occured" })
                 })
         } else {

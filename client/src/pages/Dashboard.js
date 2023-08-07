@@ -62,11 +62,14 @@ export default function Dashboard() {
     }
 
     const handleTaskChanged = useCallback(() => {
+        setLoading(true)
         ds.fetchStats().then(response => {
             console.log(response)
             dispatch({ type: "SET_TASK_STATS", payload: response })
         }).catch(() => {
             setError("An error occured when setting stats")
+        }).finally(() => {
+            setLoading(false)
         })
     }, [ds])
 

@@ -63,7 +63,7 @@ export default function PaginationComponent(props) {
         console.log(filter)
         ds.getTasks(filter, currentPage + 1, itemsPerPage).then(({ tasks, totalPages }) => {
             if (currentPage + 1 > totalPages) {
-                setCurrentPage(current => current - 1)
+                setCurrentPage(pageNumbers - 1)
             }
             console.log(filter)
             dispatch({ type: 'UPDATE_PAGINATION', ns, ds, payload: { items: tasks, totalPages, errorHandler: props.errorHandler, filter } })
@@ -74,37 +74,28 @@ export default function PaginationComponent(props) {
     }, [ds, filter, currentPage, itemsPerPage, ns, props, setCurrentPage])
 
     useEffect(() => {
-        if (filter) {
-            onTaskChanged()
-        }
+        onTaskChanged()
         ns.addObserver(NOTIF_TASK_CHANGED, onTaskChanged)
+        return () => {
+            ns.removeObserver(NOTIF_TASK_CHANGED, onTaskChanged)
+        }
     }, [itemsPerPage, filter, currentPage, ns, onTaskChanged])
 
-    // useEffect(() => {
-
-    // }, [onTaskChanged, ns])
-
-
-
     const renderList = () => {
-        try {
-            if (taskItemComponents.length > 0) {
-                return taskItemComponents.map((item, index) => {
-                    return (
-                        <Col sm='4' className='mt-2 mb-2' key={index}>
-                            {item}
-                        </Col>
-                    )
-                })
-            } else {
+        if (taskItemComponents.length > 0) {
+            return taskItemComponents.map((item, index) => {
                 return (
-                    <h1 className='text-center'>
-                        (No tasks)
-                    </h1>
+                    <Col sm='4' className='mt-2 mb-2' key={index}>
+                        {item}
+                    </Col>
                 )
-            }
-        } catch {
-            setCurrentPage(currentPage - 1)
+            })
+        } else {
+            return (
+                <h1 className='text-center'>
+                    (No tasks)
+                </h1>
+            )
         }
     }
 
