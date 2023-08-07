@@ -100,6 +100,8 @@ class HttpService {
     fetchStats = () => {
         return this.api.get('/tasks/stats').then(response => {
             return response.data
+        }).catch(err => {
+            throw err
         })
     }
 
