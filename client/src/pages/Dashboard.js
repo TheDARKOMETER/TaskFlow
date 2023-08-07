@@ -49,6 +49,7 @@ export default function Dashboard() {
         setError('')
         setMessage('')
         setLoading(true)
+        console.log(filter)
         ds.addTask(name, description, start, due, filter, currentPage, itemsPerPage)
             .then(() => {
                 setLoading(false)

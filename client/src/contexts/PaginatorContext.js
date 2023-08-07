@@ -9,7 +9,7 @@ export function usePage() {
 export default function PaginatorProvider({ children }) {
     const [currentPage, setCurrentPage] = useState(0)
     const [itemsPerPage, setItemsPerPage] = useState(6)
-    const [filter, setFilter] = useState('all')
+    const [filter, setFilter] = useState()
 
     const value = {
         currentPage,

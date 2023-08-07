@@ -18,7 +18,7 @@ class DataService {
     addTask = (title, description, startDate, dueDate) => {
         return this.http.addTask(title, description, startDate, dueDate)
             .then(() => {
-                return this.getTasks('all', this.filter, this.currentPage, this.itemsPerPage)
+                return this.getTasks(this.filter, this.currentPage + 1, this.itemsPerPage)
             })
             .then(tasks => {
                 this.ns.postNotification(NOTIF_TASK_CHANGED, tasks)
@@ -29,6 +29,7 @@ class DataService {
     }
 
     getTasks = (filter, page, itemsPerPage) => {
+        console.log(filter + "(ds)")
         return this.http.getTasks(filter, page, itemsPerPage)
     }
 
@@ -39,7 +40,7 @@ class DataService {
     updateTask = (task) => {
         return this.http.updateTask(task)
             .then(() => {
-                return this.getTasks(this.filter, this.currentPage, this.itemsPerPage)
+                return this.getTasks(this.filter, this.currentPage + 1, this.itemsPerPage)
             })
             .then(tasks => {
                 this.ns.postNotification(NOTIF_TASK_CHANGED, tasks)
@@ -51,7 +52,7 @@ class DataService {
 
     deleteTask = (taskId) => {
         return this.http.deleteTask(taskId).then(() => {
-            return this.getTasks()
+            return this.getTasks(this.filter, this.currentPage + 1, this.itemsPerPage)
         }).then(tasks => {
             this.ns.postNotification(NOTIF_TASK_CHANGED, tasks)
         }).catch(err => {

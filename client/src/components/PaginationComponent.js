@@ -6,11 +6,10 @@ import { usePage } from '../contexts/PaginatorContext'
 function paginationReducer(state, action) {
     switch (action.type) {
         case "UPDATE_PAGINATION":
-            const { items, totalPages, errorHandler } = action.payload
+            const { items, totalPages, errorHandler, filter } = action.payload
             const pageNumbers = totalPages
-            let taskItemComponents
-            taskItemComponents = items.map(task => <TaskItem errorHandler={errorHandler} ns={action.ns} ds={action.ds} task={task} key={task._id} />);
-            return { ...state, pageNumbers, taskItemComponents }
+            let taskItemComponents = items.map(task => <TaskItem errorHandler={errorHandler} ns={action.ns} ds={action.ds} task={task} key={task._id} />);
+            return { ...state, pageNumbers, taskItemComponents, filter }
         default:
             return state
     }
@@ -61,11 +60,13 @@ export default function PaginationComponent(props) {
     }
 
     const onTaskChanged = useCallback(() => {
+        console.log(filter)
         ds.getTasks(filter, currentPage + 1, itemsPerPage).then(({ tasks, totalPages }) => {
             if (currentPage + 1 > totalPages) {
                 setCurrentPage(current => current - 1)
             }
-            dispatch({ type: 'UPDATE_PAGINATION', ns, ds, payload: { items: tasks, totalPages, errorHandler: props.errorHandler } })
+            console.log(filter)
+            dispatch({ type: 'UPDATE_PAGINATION', ns, ds, payload: { items: tasks, totalPages, errorHandler: props.errorHandler, filter } })
         }).catch((err) => {
             console.log(err)
             props.errorHandler(err)
@@ -73,12 +74,15 @@ export default function PaginationComponent(props) {
     }, [ds, filter, currentPage, itemsPerPage, ns, props, setCurrentPage])
 
     useEffect(() => {
-        onTaskChanged()
-    }, [itemsPerPage, filter, currentPage, onTaskChanged])
-
-    useEffect(() => {
+        if (filter) {
+            onTaskChanged()
+        }
         ns.addObserver(NOTIF_TASK_CHANGED, onTaskChanged)
-    }, [onTaskChanged, ns])
+    }, [itemsPerPage, filter, currentPage, ns, onTaskChanged])
+
+    // useEffect(() => {
+
+    // }, [onTaskChanged, ns])
 
 
 
