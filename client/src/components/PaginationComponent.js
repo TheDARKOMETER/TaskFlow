@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useReducer, useRef, useState } from 'react'
+import React, { useCallback, useEffect, useMemo, useReducer, useRef } from 'react'
 import { NOTIF_TASK_CHANGED } from '../services/notification-service';
 import TaskItem from './TaskItem'
 import { Col, Row, Button } from 'react-bootstrap'
@@ -10,7 +10,7 @@ function paginationReducer(state, action) {
             const pageNumbers = totalPages
             let taskItemComponents
             taskItemComponents = items.map(task => <TaskItem errorHandler={errorHandler} ns={action.ns} ds={action.ds} task={task} key={task._id} />);
-            return { ...state, pageNumbers, pageNumbers, taskItemComponents }
+            return { ...state, pageNumbers, taskItemComponents }
         default:
             return state
     }
@@ -21,8 +21,6 @@ export default function PaginationComponent(props) {
     const { filter, setFilter, currentPage, setCurrentPage, itemsPerPage, setItemsPerPage } = usePage()
 
     const [paginationState, dispatch] = useReducer(paginationReducer, { itemsPerPage: 6 })
-    // const [currentPage, setCurrentPage] = useState(0)
-    // const [filter, setFilter] = useState('all')
     const quantityRef = useRef()
     const ds = useMemo(() => props.ds, [props.ds])
     const ns = useMemo(() => props.ns, [props.ns])
@@ -37,12 +35,12 @@ export default function PaginationComponent(props) {
     const pageLinks = () => {
         let pageLinks = []
         for (let x = 0; x < pageNumbers; x++) {
-            pageLinks.push(<a key={x} onClick={() => setCurrentPage(x)} style={
+            pageLinks.push(<Button variant='link' key={x} onClick={() => setCurrentPage(x)} style={
                 {
                     marginLeft: '16px',
                     ...(currentPage === x ? { fontWeight: 'bold' } : { fontWeight: '400' })
                 }
-            }>{x + 1}</a>)
+            }>{x + 1}</Button>)
         }
 
         if (currentPage + 1 > 5 && pageNumbers > 9) {
@@ -62,15 +60,7 @@ export default function PaginationComponent(props) {
         return pageLinks
     }
 
-    useEffect(() => {
-        onTaskChanged()
-    }, [itemsPerPage, filter, currentPage])
-
-    useEffect(() => {
-        ns.addObserver(NOTIF_TASK_CHANGED, onTaskChanged)
-    }, [])
-
-    const onTaskChanged = () => {
+    const onTaskChanged = useCallback(() => {
         ds.getTasks(filter, currentPage + 1, itemsPerPage).then(({ tasks, totalPages }) => {
             if (currentPage + 1 > totalPages) {
                 setCurrentPage(current => current - 1)
@@ -80,7 +70,17 @@ export default function PaginationComponent(props) {
             console.log(err)
             props.errorHandler(err)
         })
-    }
+    }, [ds, filter, currentPage, itemsPerPage, ns, props, setCurrentPage])
+
+    useEffect(() => {
+        onTaskChanged()
+    }, [itemsPerPage, filter, currentPage, onTaskChanged])
+
+    useEffect(() => {
+        ns.addObserver(NOTIF_TASK_CHANGED, onTaskChanged)
+    }, [onTaskChanged, ns])
+
+
 
     const renderList = () => {
         try {

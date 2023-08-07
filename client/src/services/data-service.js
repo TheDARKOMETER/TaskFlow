@@ -3,15 +3,15 @@ import NotificationService, { NOTIF_TASK_CHANGED } from "./notification-service"
 
 let instance = null
 class DataService {
-    constructor(httpService, filter, currentPage, itemsPerPage) {
+    constructor(httpService, filter = 'all', currentPage = 1, itemsPerPage = 6) {
         if (!instance) {
             instance = this
         }
         this.http = httpService
         this.ns = new NotificationService()
-        this.filter = filter || 'all'
-        this.currentPage = currentPage+1 || 1
-        this.itemsPerPage = itemsPerPage || 6
+        this.filter = filter
+        this.currentPage = currentPage
+        this.itemsPerPage = itemsPerPage
         return instance
     }
 

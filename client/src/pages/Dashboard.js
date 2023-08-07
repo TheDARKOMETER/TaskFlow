@@ -1,10 +1,9 @@
 import React, { useCallback, useEffect, useMemo, useReducer, useState } from 'react'
 import PageDiv from '../components/PageDiv'
 import { useAuth } from '../contexts/authContext'
-import { Row, Col, Card, Alert, Button } from 'react-bootstrap'
+import { Row, Col, Card, Alert } from 'react-bootstrap'
 import RedirectHome from '../components/RedirectHome'
 import "react-datepicker/dist/react-datepicker.css";
-import { useNavigate } from 'react-router-dom'
 import DataService from '../services/data-service'
 import NotificationService, { NOTIF_TASK_CHANGED } from '../services/notification-service'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
@@ -20,12 +19,12 @@ function dashboardReducer(state, action) {
         case "SET_TASK_STATS":
             const { allCount, missedCount, dueCount, completedCount } = action.payload
             return { ...state, allCount, missedCount, dueCount, completedCount }
+        default:
+            return state
     }
 }
 
 export default function Dashboard() {
-
-
 
     //  STATES
     const { filter, currentPage, itemsPerPage } = usePage()
@@ -33,9 +32,6 @@ export default function Dashboard() {
     const [message, setMessage] = useState('')
     const [uidToken, setUidToken] = useState()
     const [loading, setLoading] = useState(true)
-    const navigate = useNavigate()
-
-
 
     //  SERVICES
     const ns = useMemo(() => new NotificationService(), [])
@@ -49,22 +45,6 @@ export default function Dashboard() {
     //  AUTH CONTEXT
     const { currentUser, getUserToken } = useAuth()
 
-    //  FUNCTIONS
-    // const loadData = useCallback(async () => {
-    //     try {
-    //         ds.getTasks(filter).then(data => {
-    //             dispatch({ type: "SET_CLIENT_TASK", payload: data, ds, errorHandler: setError })
-    //         }).catch((err) => {
-    //             (err.code === "ERR_NETWORK") ? setError("Connection to server lost. Try again later") : navigate('/auth/unauthorized')
-    //         })
-    //     } catch (err) {
-    //         setError("An error has occured")
-    //     } finally {
-    //         setLoading(false)
-    //     }
-    // }, [ds, navigate, filter])
-
-
     const addTask = (name, description, start, due) => {
         setError('')
         setMessage('')
@@ -73,26 +53,21 @@ export default function Dashboard() {
             .then(() => {
                 setLoading(false)
                 setMessage(`Task "${name}" has been added successfully.`)
-            }).catch((err) => {
-                setError(`An error has occcured ${err}`)
+            }).catch(() => {
+                setError(`An error has occcured while adding a task`)
             }).finally(() => {
                 setLoading(false)
             })
     }
 
-    const onTaskChanged = () => {
+    const handleTaskChanged = useCallback(() => {
         ds.fetchStats().then(response => {
             console.log(response)
             dispatch({ type: "SET_TASK_STATS", payload: response })
+        }).catch(() => {
+            setError("An error occured when setting stats")
         })
-    }
-
-    const btnLinkStyle = {
-        fontSize: '1em',
-        color: 'black',
-        textDecoration: 'none'
-    }
-
+    }, [ds])
 
     /* You dont really need to get the token here anymore
     as I already have a hook to get the current user token,
@@ -107,16 +82,16 @@ export default function Dashboard() {
                 const uidToken = await getUserToken(currentUser)
                 return uidToken
             } catch {
-                setError("An error has occured")
+                setError("An error has occured while fetching your authentication token")
             }
         }
         getUidToken().then(token => {
             setUidToken(token)
         }).catch(err => {
-            console.log(err)
+            setError("An error occured while fetching your token")
         })
-        ns.addObserver(NOTIF_TASK_CHANGED, onTaskChanged)
-    }, [currentUser, getUserToken, ns])
+        ns.addObserver(NOTIF_TASK_CHANGED, handleTaskChanged)
+    }, [currentUser, getUserToken, ns, handleTaskChanged])
 
 
     useEffect(() => {
@@ -130,14 +105,6 @@ export default function Dashboard() {
             setLoading(false)
         }
     }, [uidToken, ds])
-
-    // useEffect(() => {
-    //     // Sets task when allTasks changes, thus updating the state and re-rendering the component
-    //     if (uidToken) {
-    //         loadData()
-    //     }
-    // }, [uidToken, loadData, allTasks])
-
 
     return (
         <>
@@ -156,23 +123,13 @@ export default function Dashboard() {
                                     <Card.Text>You have {dueCount} task(s) due</Card.Text>
                                     <Card.Text>Missed Tasks: {missedCount}</Card.Text>
                                     <Card.Text>Completed Tasks: {completedCount}</Card.Text>
+                                    <Card.Text>Total Tasks: {allCount}</Card.Text>
                                     <AddTaskModal addTaskHandler={addTask} />
                                 </Card.Body>
                             </Card>
                         </Col>
                         <Col />
                     </Row>
-                    {/* <Row className='pb-5'>
-                            <Col className='text-center'>
-                                <h1>Your tasks</h1>
-                                <div>
-                                    <Button style={{ ...btnLinkStyle, textDecoration: filter === 'all' ? 'underline' : 'none' }} variant='link' onClick={() => setFilter('all')}>All Tasks</Button>
-                                    <Button style={{ ...btnLinkStyle, textDecoration: filter === 'due' ? 'underline' : 'none' }} variant='link' onClick={() => setFilter('due')}>Due Tasks</Button>
-                                    <Button style={{ ...btnLinkStyle, textDecoration: filter === 'missed' ? 'underline' : 'none' }} variant='link' onClick={() => setFilter('missed')}>Missed Tasks</Button>
-                                    <Button style={{ ...btnLinkStyle, textDecoration: filter === 'completed' ? 'underline' : 'none' }} variant='link' onClick={() => setFilter('completed')}>Completed Tasks</Button>
-                                </div>
-                            </Col>
-                        </Row> */}
                     <Row className='d-flex justify-content-center'>
                         {!loading && <PaginationComponent errorHandler={setError} ns={ns} ds={ds} />}
                     </Row>
