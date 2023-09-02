@@ -15,7 +15,7 @@ class HttpService {
     }
 
     addTask = (title, description, startDate, dueDate, owner) => {
-        return this.api.post('http://localhost:4001/task/add', {
+        return this.api.post('/task/add', {
             title,
             description,
             startDate,
@@ -30,7 +30,7 @@ class HttpService {
     }
 
     updateTask = (newTask) => {
-        return this.api.put('http://localhost:4001/task/update', {
+        return this.api.put('/task/update', {
             _id: newTask._id,
             title: newTask.title,
             description: newTask.description,
@@ -46,10 +46,18 @@ class HttpService {
         })
     }
 
+    deleteTask = (taskId) => {
+        return this.api.delete(`/task/delete/${taskId}`).then(response => {
+            return response.data
+        }).catch(err => {
+            console.log("An error occured when deleting a task")
+            throw err
+        })
+    }
 
 
     loginUser = (uid) => {
-        return this.api.post('http://localhost:4001/login', {
+        return this.api.post('/login', {
             firebaseUid: uid
         }).then(response => {
             console.log(response.data)
@@ -61,7 +69,7 @@ class HttpService {
 
 
     signUpUser = (uid) => {
-        return this.api.post('http://localhost:4001/signup', {
+        return this.api.post('/signup', {
             firebaseUid: uid
         }).then(response => {
             return response.data
@@ -71,19 +79,31 @@ class HttpService {
     }
 
 
-    getTasks = (filter) => {
-        return this.api.get('http://localhost:4001/tasks/', {
+    getTasks = (filter, page, itemsPerPage) => {
+        return this.api.get('/tasks/', {
             params: {
-                filter: filter
+                filter,
+                page,
+                itemsPerPage
             }
         }
         ).then(response => {
-            return response.data
+            return {
+                tasks: response.data.tasks,
+                totalPages: response.data.totalPages
+            }
         }).catch(err => {
             throw err
         })
     }
 
+    fetchStats = () => {
+        return this.api.get('/tasks/stats').then(response => {
+            return response.data
+        }).catch(err => {
+            throw err
+        })
+    }
 
 }
 

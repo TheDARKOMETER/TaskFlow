@@ -1,18 +1,29 @@
-import React from 'react'
+import React, { useEffect, useMemo } from 'react'
 import { Card, Button } from 'react-bootstrap'
-import DataService from '../services/data-service'
 import { useAuth } from '../contexts/authContext'
-import HttpService from '../services/http-service'
 
 export default function TaskItem(props) {
-    const ds = new DataService(new HttpService())
-    const startDate = new Date(props.task.startDate)
-    const dueDate = new Date(props.task.dueDate)
+
+    const startDate = useMemo(() => new Date(props.task.startDate), [props.task.startDate])
+    const dueDate = useMemo(() => new Date(props.task.dueDate), [props.task.dueDate])
     const { userToken } = useAuth()
+    const ds = props.ds
+
+    useEffect(() => {
+        userToken && ds.setHttpAuth(userToken)
+    }, [userToken, ds])
 
     const markComplete = () => {
-        ds.setHttpAuth(userToken)
-        ds.updateTask({ ...props.task, completed: true })
+        ds.updateTask({ ...props.task, completed: true }).catch((err) => {
+            console.log(err)
+            props.errorHandler("An error occured, try refreshing")
+        })
+    }
+
+    const deleteTask = () => {
+        ds.deleteTask(props.task._id).catch(() => {
+            props.errorHandler("An error occured, try refreshing")
+        })
     }
 
     return (
@@ -51,6 +62,7 @@ export default function TaskItem(props) {
                     fontWeight: 'bold'
                 }}>{props.task.missed ? "Yes" : "No"}</span></Card.Text>
                 <Button variant='dark' disabled={props.task.missed || props.task.completed} onClick={markComplete}>Mark as Complete</Button>
+                <Button variant='danger' onClick={deleteTask}>Delete Task</Button>
             </Card.Body>
         </Card >
     )
