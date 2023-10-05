@@ -45,6 +45,10 @@ const checkIfUserExists = (firebaseUid) => {
 
 startDBServer()
 
+app.get('/', (req,res) => {
+    res.json("Hello!")
+})
+
 app.get('/tasks/', authenticateUser, (req, res) => {
     const { filter, page, itemsPerPage } = req.query
     let promises = []
