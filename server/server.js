@@ -4,7 +4,7 @@ const cors = require('cors')
 const db = require('./db');
 const admin = require('firebase-admin')
 const authenticateUser = require('./authenticateUser')
-const PORT = 4001
+const PORT = process.env.PORT || 3000
 
 const Task = require('./models/task')
 const User = require('./models/user');
