@@ -13,7 +13,15 @@ const bodyParser = require('body-parser');
 
 app.use(
     cors({
-        origin: ['http://127.0.0.1:3000/', 'http://127.0.0.1:3001/', 'http://localhost:3001/', 'http://localhost:3000/', 'https://task-flow-i742-git-main-thedarkometer.vercel.app/', 'https://task-flow-i742.vercel.app/' ,'https://task-flow-i742-9e83zva6p-thedarkometer.vercel.app/'],
+        origin: [
+            'http://127.0.0.1:3000',
+            'http://127.0.0.1:3001',
+            'http://localhost:3001',
+            'http://localhost:3000',
+            'https://task-flow-i742-git-main-thedarkometer.vercel.app',
+            'https://task-flow-i742.vercel.app',
+            'https://task-flow-i742-9e83zva6p-thedarkometer.vercel.app'
+        ],
         methods: ['GET', 'POST', 'PUT', 'DELETE'],
         credentials: true,
         optionsSuccessStatus: 204, // Optional: Returns 204 No Content for pre-flight requests
@@ -45,7 +53,7 @@ const checkIfUserExists = (firebaseUid) => {
 
 startDBServer()
 
-app.get('/', (req,res) => {
+app.get('/', (req, res) => {
     res.json("Hello!")
 })
 
