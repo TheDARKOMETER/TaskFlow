@@ -3,7 +3,7 @@ const mongoose = require('mongoose')
 
 const connectToDatabase = async () => {
     try {
-        await mongoose.connect('mongodb://127.0.0.1/taskflow', {
+        await mongoose.connect('mongodb+srv://atlascluster.inu6gpk.mongodb.net/', {
             useNewUrlParser: true,
             useUnifiedTopology: true
         })
