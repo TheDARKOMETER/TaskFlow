@@ -1,7 +1,7 @@
 import axios from "axios";
 import 'whatwg-fetch'
 
-const API_BASE_URL = "http://localhost:4001/"
+const API_BASE_URL = "http://localhost:3000/"
 
 class HttpService {
 
