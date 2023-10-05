@@ -1,6 +1,8 @@
+const dotenv = require('dotenv')
 var admin = require("firebase-admin");
+dotenv.config({ path: '.env.local' })
+var serviceAccount = require(process.env.ADMIN_CONFIG_PATH);
 
-var serviceAccount = require("./admin-config/taskflow-443cf-firebase-adminsdk-xxmeg-59f39566da.json");
 
 admin.initializeApp({
     credential: admin.credential.cert(serviceAccount)
@@ -21,7 +23,7 @@ const authenticateUser = async (req, res, next) => {
         req.user = { uid: decodedtoken.uid }
         next()
     } catch (err) {
-        return res.status(401).json({error: 'Unauthorized'})
+        return res.status(401).json({ error: 'Unauthorized' })
     }
 }
 

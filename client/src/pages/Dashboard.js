@@ -1,60 +1,84 @@
-import React, { useEffect, useRef, useState } from 'react'
+import React, { useCallback, useEffect, useMemo, useReducer, useState } from 'react'
 import PageDiv from '../components/PageDiv'
 import { useAuth } from '../contexts/authContext'
-import { Row, Col, Button, Form, Card, Alert } from 'react-bootstrap'
+import { Row, Col, Card, Alert } from 'react-bootstrap'
 import RedirectHome from '../components/RedirectHome'
-import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
+import DataService from '../services/data-service'
+import NotificationService, { NOTIF_TASK_CHANGED } from '../services/notification-service'
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import { faSpinner } from '@fortawesome/free-solid-svg-icons'
+import AddTaskModal from '../modals/AddTaskModal'
 import HttpService from '../services/http-service'
-import { useNavigate } from 'react-router-dom'
-import TaskItem from '../components/TaskItem'
+import PaginationComponent from '../components/PaginationComponent'
+import { usePage } from '../contexts/PaginatorContext'
+
+
+function dashboardReducer(state, action) {
+    switch (action.type) {
+        case "SET_TASK_STATS":
+            const { allCount, missedCount, dueCount, completedCount } = action.payload
+            return { ...state, allCount, missedCount, dueCount, completedCount }
+        default:
+            return state
+    }
+}
 
 export default function Dashboard() {
-    const http = new HttpService()
-    const taskNameRef = useRef()
-    const descriptionRef = useRef()
-    const navigate = useNavigate()
 
-    const { currentUser, getUserToken } = useAuth()
-    const [startDate, setStartDate] = useState(new Date())
-    const [dueDate, setDueDate] = useState(new Date())
+    //  STATES
+    const { filter, currentPage, itemsPerPage } = usePage()
     const [error, setError] = useState('')
     const [message, setMessage] = useState('')
     const [uidToken, setUidToken] = useState()
-    const [tasks, setTasks] = useState([])
+    const [loading, setLoading] = useState(true)
 
-    const loadData = async () => {
-        const uidToken = await getUserToken(currentUser)
-        http.loadUserDashboard(uidToken).then(data => {
-            setTasks(data)
-        }).catch((err) => {
-            (err.code === "ERR_NETWORK") ? setError("Connection to server lost. Try again later") : navigate('/auth/unauthorized')
-        })
-    }
+    //  SERVICES
+    const ns = useMemo(() => new NotificationService(), [])
+    const ds = useMemo(() => new DataService(new HttpService(), filter, currentPage, itemsPerPage), [filter, currentPage, itemsPerPage])
 
-    const renderTasks = () => {
-        return tasks.map((task) => {
-            return (
-                <div>
-                    <TaskItem key={task._id} title={task.title} description={task.description} />
-                </div>
-            )
-        });
-    };
+    //  REDUCER
+    const [dashboardState, dispatch] = useReducer(dashboardReducer, { missedTasks: 0, completedTasks: 0, allTasks: 0, dueTasks: 0 })
+    const { allCount, missedCount, dueCount, completedCount } = dashboardState
 
 
-    const addTask = () => {
+    //  AUTH CONTEXT
+    const { currentUser, getUserToken } = useAuth()
+
+    const addTask = (name, description, start, due) => {
         setError('')
         setMessage('')
-        http.addTask(uidToken, taskNameRef.current.value, descriptionRef.current.value, startDate.toUTCString(), dueDate.toUTCString(), currentUser.uid)
-            .then(response => {
-                console.log(response)
-                setMessage(`Task "${response.title}" has been added successfully.`)
-                setTasks(prevTasks => [...prevTasks, response])
+        setLoading(true)
+        console.log(filter)
+        ds.addTask(name, description, start, due, filter, currentPage, itemsPerPage)
+            .then(() => {
+                setLoading(false)
+                setMessage(`Task "${name}" has been added successfully.`)
             }).catch(() => {
-                setError(`An error has occcured DEBUG TIME: ${startDate.toUTCString()} |  ${dueDate.toUTCString()}`)
+                setError(`An error has occcured while adding a task`)
+            }).finally(() => {
+                setLoading(false)
             })
     }
+
+    const handleTaskChanged = useCallback(() => {
+        setLoading(true)
+        ds.fetchStats().then(response => {
+            console.log(response)
+            dispatch({ type: "SET_TASK_STATS", payload: response })
+        }).catch(() => {
+            setError("An error occured when setting stats")
+        }).finally(() => {
+            setLoading(false)
+        })
+    }, [ds])
+
+    /* You dont really need to get the token here anymore
+    as I already have a hook to get the current user token,
+    but I'll just leave it here because I struggled just to
+    do this. You may also use this as a reviewer on the use
+    of async functions */
+
 
     useEffect(() => {
         const getUidToken = async () => {
@@ -62,84 +86,61 @@ export default function Dashboard() {
                 const uidToken = await getUserToken(currentUser)
                 return uidToken
             } catch {
-                setError("An error has occured")
+                setError("An error has occured while fetching your authentication token")
             }
         }
         getUidToken().then(token => {
             setUidToken(token)
         }).catch(err => {
-            console.log(err)
+            setError("An error occured while fetching your token")
         })
-
-    }, [])
+        ns.addObserver(NOTIF_TASK_CHANGED, handleTaskChanged)
+    }, [currentUser, getUserToken, ns, handleTaskChanged])
 
 
     useEffect(() => {
+        setLoading(true)
         if (uidToken) {
-            loadData()
+            ds.setHttpAuth(uidToken)
+            ds.fetchStats().then(response => {
+                console.log(response)
+                dispatch({ type: "SET_TASK_STATS", payload: response })
+            }).catch(() => {
+                setError("An error occured when setting stats")
+            })
+            setLoading(false)
         }
-    }, [uidToken])
-
-    // useEffect(() => {
-    //     renderTasks()
-    // }, [tasks])
-
-    // useEffect(() => {
-    //     alert(startDate.toISOString())
-    // }, [startDate])
+    }, [uidToken, ds])
 
     return (
-
         <>
-            {currentUser ? (<PageDiv isBackGroundWhite={true}>
-                <Row>
-                    <Col />
-                    <Col md='5'>
-                        <h1>Welcome, {currentUser.displayName ?? currentUser.email}</h1>
-                        <Card>
-                            <Card.Body>
-                                {message && <Alert variant='success'>{message}</Alert>}
-                                {error && <Alert variant='danger'>{error}</Alert>}
-                                <Card.Title>Create a task</Card.Title>
-                                <Form>
-                                    <Form.Group className="mb-3">
-                                        <Form.Label>Task Name</Form.Label>
-                                        <Form.Control ref={taskNameRef} type="text" placeholder="Enter task name" />
-                                    </Form.Group>
-                                    <Form.Group className="mb-3">
-                                        <Form.Label>Description</Form.Label>
-                                        <Form.Control ref={descriptionRef} type="text" placeholder="Description" />
-                                    </Form.Group>
-                                    <Form.Group className='mb-3'>
-                                        <Form.Label>Start Date</Form.Label>
-                                        <div><DatePicker selected={startDate} onChange={(date) => {
-                                            setStartDate(date);
-                                        }} /></div>
-                                    </Form.Group>
-                                    <Form.Group className='mb-3'>
-                                        <Form.Label>Due Date</Form.Label>
-                                        <div><DatePicker selected={dueDate} onChange={(date) => setDueDate(date)} /></div>
-                                    </Form.Group>
-                                    <Button onClick={addTask} variant="dark">
-                                        Create Task
-                                    </Button>
-                                </Form>
-                            </Card.Body>
-                        </Card>
-                    </Col>
-                    <Col />
-                </Row>
-                <Row>
-                    <Col />
-                    <Col md='9'>
-                        <div>
-                            {renderTasks()}
-                        </div>
-
-                    </Col>
-                    <Col />
-                </Row>
-            </PageDiv>) : (<RedirectHome />)}
+            {currentUser ? (
+                <PageDiv isBackGroundWhite={true}>
+                    <Row className='pb-5'>
+                        <Col />
+                        <Col md='5'>
+                            <h1>Welcome, {currentUser.displayName ?? currentUser.email}</h1>
+                            <Card>
+                                <Card.Body>
+                                    {loading && <Alert variant='info'>{<FontAwesomeIcon style={{ marginRight: '1.2rem' }} icon={faSpinner} spin />}Loading tasks</Alert>}
+                                    {message && <Alert variant='success'>{message}</Alert>}
+                                    {error && <Alert variant='danger'>{error}</Alert>}
+                                    <Card.Title>Your Stats</Card.Title>
+                                    <Card.Text>You have {dueCount} task(s) due</Card.Text>
+                                    <Card.Text>Missed Tasks: {missedCount}</Card.Text>
+                                    <Card.Text>Completed Tasks: {completedCount}</Card.Text>
+                                    <Card.Text>Total Tasks: {allCount}</Card.Text>
+                                    <AddTaskModal addTaskHandler={addTask} />
+                                </Card.Body>
+                            </Card>
+                        </Col>
+                        <Col />
+                    </Row>
+                    <Row className='d-flex justify-content-center'>
+                        {!loading && <PaginationComponent errorHandler={setError} ns={ns} ds={ds} />}
+                    </Row>
+                </PageDiv>
+            ) : (<RedirectHome />)}
         </>
     )
 }

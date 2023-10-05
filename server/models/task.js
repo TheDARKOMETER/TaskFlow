@@ -20,7 +20,12 @@ const taskSchema = new mongoose.Schema({
     dueDate: {
         type: Date,
         required: true,
-        min: [getCurrentDate, `Date must not be set in the past {VALUE}`]
+        validate: {
+            validator: function (value) {
+                return !(value < this.startDate)
+            },
+            message: 'Due date must not be before the start date and current date, {VALUE}'
+        }
     },
     completed: { type: Boolean, default: false },
     missed: { type: Boolean, default: false },

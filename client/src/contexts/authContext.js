@@ -11,13 +11,24 @@ export function useAuth() {
 
 export default function AuthProvider({ children }) {
     const [currentUser, setCurrentUser] = useState()
+    const [userToken, setUserToken] = useState()
     const [loading, setLoading] = useState(true)
+    const [actionType, setActionType] = useState('')
+    const [http, setHttp] = useState()
 
-    const http = new HttpService()
+    // TODO: Fix HttpService authToken
 
     function signup(email, password) {
         return createUserWithEmailAndPassword(auth, email, password).then((userCredential) => {
             setCurrentUser(userCredential.user)
+            return userCredential.user
+        }).then((user) => {
+            getUserToken(user).then((token) => {
+                setHttp(new HttpService(token))
+                setActionType('signup')
+            }).catch((err) => {
+                throw err
+            })
         }).catch((err) => {
             throw new Error(err.message.replace('Firebase: Error ', ''))
         })
@@ -46,27 +57,36 @@ export default function AuthProvider({ children }) {
             // userCredential.user.getIdToken().then((token) => console.log(token))  <-- Gets the token of the current user
             setCurrentUser(userCredential.user)
             console.log(currentUser)
-            setLoading(false)
             return userCredential.user
-        }).then(async (user) => {
-            try {
-                const token = await getUserToken(user)
-                http.loginUser(token, user.uid)
-            } catch(err) {
-                throw err
-            }
+        }).then((user) => {
+            getUserToken(user).then((token) => {
+                setHttp(new HttpService(token))
+                setActionType('signin')
+            })
         }).catch((err) => {
             throw new Error(err.message.replace('Firebase: Error ', ''))
         })
     }
 
-
+    useEffect(() => {
+        if (http && actionType && currentUser) {
+            switch (actionType) {
+                case 'signin':
+                    http.loginUser(currentUser.uid)
+                    break
+                case 'signup':
+                    http.signUpUser(currentUser.uid)
+                    break
+                default:
+                    return null
+            }
+        }
+    }, [http, actionType, currentUser])
 
     function getUserToken(user) {
-        const token = getIdToken(user).catch(err => {
+        return getIdToken(user).catch(err => {
             throw new Error(err.message.replace('Firebase: Error ', ''))
         })
-        return token
     }
 
     function logout() {
@@ -80,15 +100,11 @@ export default function AuthProvider({ children }) {
     useEffect(() => {
         const unsubscribe = auth.onAuthStateChanged((user) => {
             setCurrentUser(user)
+            user && getUserToken(user).then(token => setUserToken(token))
             setLoading(false)
         })
         return unsubscribe
     }, [])
-
-    // useEffect(() => {
-    //     const notifyChange = console.log(currentUser)
-    //     return notifyChange
-    // }, [currentUser])
 
     const value = {
         currentUser,
@@ -98,7 +114,8 @@ export default function AuthProvider({ children }) {
         resetPassword,
         updateDisplayName,
         updatePasswordWrapper,
-        getUserToken
+        getUserToken,
+        userToken
     }
 
     return (
