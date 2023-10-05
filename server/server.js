@@ -20,7 +20,8 @@ app.use(
             'http://localhost:3000',
             'https://task-flow-i742-git-main-thedarkometer.vercel.app',
             'https://task-flow-i742.vercel.app',
-            'https://task-flow-i742-9e83zva6p-thedarkometer.vercel.app'
+            'https://task-flow-i742-9e83zva6p-thedarkometer.vercel.app',
+            'https://task-flow-frontend.vercel.app/'
         ],
         methods: ['GET', 'POST', 'PUT', 'DELETE'],
         credentials: true,

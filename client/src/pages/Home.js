@@ -8,9 +8,13 @@ import LogoLight from '../assets/logo-simplified-light.png'
 // import { faCoffee } from '@fortawesome/free-solid-svg-icons'
 import { useAuth } from '../contexts/authContext'
 import UserCard from '../components/UserCard'
+import axios from 'axios'
 
 export default function Home() {
     const { currentUser } = useAuth()
+    axios.get('https://task-flow-i742.vercel.app/').then(response => {
+        console.log(response)
+    })
 
     return (
         <>
