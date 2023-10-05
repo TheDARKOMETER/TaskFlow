@@ -7,8 +7,16 @@ function paginationReducer(state, action) {
     switch (action.type) {
         case "UPDATE_PAGINATION":
             const { items, totalPages, errorHandler, filter } = action.payload
+            console.log(items)
             const pageNumbers = totalPages
-            let taskItemComponents = items.map(task => <TaskItem errorHandler={errorHandler} ns={action.ns} ds={action.ds} task={task} key={task._id} />);
+            let taskItemComponents = []
+            try {
+                taskItemComponents = items.map(task => <TaskItem errorHandler={errorHandler} ns={action.ns} ds={action.ds} task={task} key={task._id} />);
+            } catch (err) {
+                console.log("Mapping error")
+                errorHandler("An error occured")
+                return
+            }
             return { ...state, pageNumbers, taskItemComponents, filter }
         default:
             return state
@@ -36,12 +44,12 @@ export default function PaginationComponent(props) {
         for (let x = 0; x < pageNumbers; x++) {
             pageLinks.push(<Button variant='link' key={x} onClick={() => setCurrentPage(x)} style={
                 {
+                    ...btnLinkStyle,
                     marginLeft: '16px',
-                    ...(currentPage === x ? { fontWeight: 'bold' } : { fontWeight: '400' })
+                    ...(currentPage === x ? { fontWeight: 'bold', color: 'white', backgroundColor: 'black', borderRadius: '70%' } : { fontWeight: '400' })
                 }
             }>{x + 1}</Button>)
         }
-
         if (currentPage + 1 > 5 && pageNumbers > 9) {
             let pagesLeft = pageNumbers - (currentPage + 1)
             if (pagesLeft > 4) {
@@ -51,11 +59,9 @@ export default function PaginationComponent(props) {
                 pageLinks = pageLinks.slice(pageNumbers - 9)
             }
         }
-
         if (pageNumbers > 9) {
             pageLinks = pageLinks.slice(0, 9)
         }
-
         return pageLinks
     }
 
@@ -66,10 +72,9 @@ export default function PaginationComponent(props) {
             }
             dispatch({ type: 'UPDATE_PAGINATION', ns, ds, payload: { items: tasks, totalPages, errorHandler: props.errorHandler, filter } })
         }).catch((err) => {
-            console.log(err)
-            props.errorHandler(err)
+            props.errorHandler("An error occured when getting tasks, try reloading")
         })
-    }, [ds, filter, currentPage, itemsPerPage, ns, props, setCurrentPage])
+    }, [ds, filter, currentPage, itemsPerPage, pageNumbers, ns, props, setCurrentPage])
 
     useEffect(() => {
         onTaskChanged()
@@ -80,20 +85,25 @@ export default function PaginationComponent(props) {
     }, [itemsPerPage, filter, currentPage, ns, onTaskChanged])
 
     const renderList = () => {
-        if (taskItemComponents.length > 0) {
-            return taskItemComponents.map((item, index) => {
+        try {
+            if (taskItemComponents.length > 0) {
+                return taskItemComponents.map((item, index) => {
+                    return (
+                        <Col sm='4' className='mt-2 mb-2' key={index}>
+                            {item}
+                        </Col>
+                    )
+                })
+            } else {
                 return (
-                    <Col sm='4' className='mt-2 mb-2' key={index}>
-                        {item}
-                    </Col>
+                    <h1 className='text-center'>
+                        (No tasks)
+                    </h1>
                 )
-            })
-        } else {
-            return (
-                <h1 className='text-center'>
-                    (No tasks)
-                </h1>
-            )
+            }
+        } catch (err) {
+            props.errorHandler(err)
+            return null
         }
     }
 
@@ -110,10 +120,10 @@ export default function PaginationComponent(props) {
                     </div>
                 </Col>
             </Row>
-            {taskItemComponents && renderList()}
-            <div>
-                {pageLinks()}
-            </div>
+            {Array.isArray(taskItemComponents) && renderList()}
+            <div style={{ textAlign: 'center' }} className='pt-4 pb-4'>
+                {Array.isArray(taskItemComponents) && pageLinks()}
+            </div >
             <label style={{ marginLeft: '16px', marginRight: '16px' }} htmlFor='quantity'>Items per page</label>
             <input type='number' min='1' max='10' defaultValue={itemsPerPage} ref={quantityRef} onChange={() => {
                 setItemsPerPage(quantityRef.current.value)

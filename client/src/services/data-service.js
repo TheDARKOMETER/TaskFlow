@@ -29,11 +29,15 @@ class DataService {
     }
 
     getTasks = (filter, page, itemsPerPage) => {
-        return this.http.getTasks(filter, page, itemsPerPage)
+        return this.http.getTasks(filter, page, itemsPerPage).catch(err => {
+            throw err
+        })
     }
 
     fetchStats = () => {
-        return this.http.fetchStats()
+        return this.http.fetchStats().catch(err => {
+            throw err
+        })
     }
 
     updateTask = (task) => {

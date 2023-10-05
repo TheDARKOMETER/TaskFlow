@@ -58,8 +58,6 @@ app.get('/tasks/', authenticateUser, (req, res) => {
     } else if (filter === 'completed') {
         findQuery.completed = true
     }
-    console.log(page)
-    console.log(itemsPerPage)
     Task.countDocuments(findQuery).then((totalItems) => {
         const totalPages = Math.ceil(totalItems / itemsPerPage)
         if (totalItems > 0) {
@@ -68,7 +66,7 @@ app.get('/tasks/', authenticateUser, (req, res) => {
                 .limit(itemsPerPage)
                 .then(tasks => {
                     const updateTasks = tasks.map((task) => {
-                        if (new Date(task.dueDate).toLocaleDateString() < new Date(Date.now()).toLocaleDateString()) {
+                        if (new Date(task.dueDate).toLocaleDateString() < new Date(Date.now()).toLocaleDateString() && !task.completed) {
                             task.missed = true
                         }
                         // console.log(new Date(task.dueDate).toLocaleDateString())

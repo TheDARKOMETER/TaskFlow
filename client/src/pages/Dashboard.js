@@ -105,6 +105,8 @@ export default function Dashboard() {
             ds.fetchStats().then(response => {
                 console.log(response)
                 dispatch({ type: "SET_TASK_STATS", payload: response })
+            }).catch(() => {
+                setError("An error occured when setting stats")
             })
             setLoading(false)
         }
