@@ -79,6 +79,7 @@ app.get('/tasks/', authenticateUser, (req, res) => {
                 .limit(itemsPerPage)
                 .then(tasks => {
                     const updateTasks = tasks.map((task) => {
+                        console.log(new Date(Date.now()).toLocaleDateString())
                         if (new Date(task.dueDate).toLocaleDateString() < new Date(Date.now()).toLocaleDateString() && !task.completed) {
                             task.missed = true
                         }
