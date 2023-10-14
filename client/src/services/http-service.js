@@ -1,7 +1,6 @@
 import axios from "axios";
 import 'whatwg-fetch'
-
-const API_BASE_URL = "https://task-flow-i742.vercel.app/"
+const API_BASE_URL = process.env.NODE_ENV === 'production' ? 'https://task-flow-i742.vercel.app/' : 'http://127.0.0.1:3000/'
 
 class HttpService {
 

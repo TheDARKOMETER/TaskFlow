@@ -114,7 +114,7 @@ app.get('/tasks/stats', authenticateUser, (req, res) => {
     let dueCount = Task.countDocuments({ owner: req.user.uid, completed: false, missed: false })
     let completedCount = Task.countDocuments({ owner: req.user.uid, completed: true })
     let missedCount = Task.countDocuments({ owner: req.user.uid, missed: true })
-    let allCount = Task.countDocuments()
+    let allCount = Task.countDocuments({ owner: req.user.uid })
     Promise.all([dueCount, completedCount, missedCount, allCount])
         .then(([dueCount, completedCount, missedCount, allCount]) => {
             res.status(200).json({

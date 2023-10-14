@@ -1,9 +1,8 @@
 const mongoose = require('mongoose')
-
-
+require('dotenv').config({ path: 'env.local' })
 const connectToDatabase = async () => {
     try {
-        await mongoose.connect('mongodb+srv://Vonchez:KevinIs19!@atlascluster.inu6gpk.mongodb.net/taskflow', {
+        await mongoose.connect(process.env.MONGODB_URI, {
             useNewUrlParser: true,
             useUnifiedTopology: true
         })
