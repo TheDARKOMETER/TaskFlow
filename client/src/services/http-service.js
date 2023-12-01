@@ -22,9 +22,9 @@ class HttpService {
             owner
         }).then(response => {
             return response.data
-        }).catch(err => {
-            console.log(err)
-            throw err
+        }).catch(response => {
+            console.log(response)
+            throw response
         })
     }
 
